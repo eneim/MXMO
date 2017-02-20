@@ -7,3 +7,15 @@
 /build
 /captures
 .externalNativeBuild
+/app/src/androidTest/
+/.idea/compiler.xml
+/.idea/gradle.xml
+/.idea/runConfigurations.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
+/.idea/inspectionProfiles/
+!/.idea/inspectionProfiles/Project_Default.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/app/build/
+/app/proguard-rules.pro
