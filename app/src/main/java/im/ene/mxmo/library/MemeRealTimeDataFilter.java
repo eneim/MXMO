@@ -43,9 +43,9 @@ class MemeRealTimeDataFilter {
   MemeRealTimeDataFilter(@NonNull Source cmdSource, @NonNull GyroData calibGyroData) {
     this.cmdSource = cmdSource;
     if (cmdSource == Source.HEAD) {
-      IDLE_TIME = 1000;
+      IDLE_TIME = 750;  // TODO optimize this value
     } else {
-      IDLE_TIME = 100;
+      IDLE_TIME = 250;  // TODO optimize this value
     }
 
     this.calibGyroData = calibGyroData;
@@ -63,6 +63,7 @@ class MemeRealTimeDataFilter {
     } else {
       switch (cmdSource) {
         case EYE:
+          // TODO 最適化
           if (data.getBlinkStrength() > 30 || data.getBlinkSpeed() > 50) {
             return setCommand(Command.of(cmdSource, Action.EYE_BLINK));
           } else if (data.getEyeMoveLeft() > 0) {

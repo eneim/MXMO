@@ -184,6 +184,45 @@ public class MemeDataActivity extends BaseActivity
   @Override public void onEyeAction(Command action) {
     if (action.getAction() != Action.IDLE) {
       actionEye.setText(action.toString());
+
+      cursor.set(adapter.getCursorCell());
+      switch (action.getAction()) {
+        //case ROLL_LEFT:
+        //  if (cursor.decrementAndGet() < 0) {
+        //    cursor.set(0);
+        //  }
+        //
+        //  adapter.setCursorCell(cursor.get());
+        //  break;
+
+        // TODO implement the following logic
+
+        // if GAME MODE --> RIGHT: move cursor, LEFT: do nothing
+        // if COMMENT MODE --> RIGHT: open dialog, select emoji, also check the command right before this, if LEFT --> do nothing (案)
+        // LEFT: go to OK button or Cancel, but not enter, count down to OK or Cancel. (also check command before this?)
+
+        // switch between GAME MODE and COMMENT MODE:
+        // YAW-LEFT : GAME MODE if on turn,
+        // YAW-RIGHT: COMMENT MODE
+
+        // TODO Try Bridge App
+
+        case EYE_TURN_RIGHT:
+          cursor.incrementAndGet();
+          adapter.setCursorCell(cursor.get());
+          if (layoutManager.findLastVisibleItemPosition() < cursor.get()
+              || layoutManager.findFirstVisibleItemPosition() > cursor.get()) {
+            recyclerView.smoothScrollToPosition(cursor.get());
+          }
+          break;
+        case EYE_TURN_UP:
+          if (cursor.get() >= 0) {
+            adapter.setSelectedCell(cursor.get());
+          }
+          break;
+        default:
+          break;
+      }
     }
   }
 
@@ -193,32 +232,6 @@ public class MemeDataActivity extends BaseActivity
     if (action.getAction() != Action.IDLE) {
       Log.d(TAG, "onHeadAction() called with: action = [" + action + "]");
       actionHead.setText(action.toString());
-
-      cursor.set(adapter.getCursorCell());
-      switch (action.getAction()) {
-        case ROLL_LEFT:
-          if (cursor.decrementAndGet() < 0) {
-            cursor.set(0);
-          }
-
-          adapter.setCursorCell(cursor.get());
-          break;
-        case ROLL_RIGHT:
-          cursor.incrementAndGet();
-          adapter.setCursorCell(cursor.get());
-          if (layoutManager.findLastVisibleItemPosition() < cursor.get()
-              || layoutManager.findFirstVisibleItemPosition() > cursor.get()) {
-            recyclerView.smoothScrollToPosition(cursor.get());
-          }
-          break;
-        case PITCH_BACKWARD:
-          if (cursor.get() >= 0) {
-            adapter.setSelectedCell(cursor.get());
-          }
-          break;
-        default:
-          break;
-      }
     }
   }
 }

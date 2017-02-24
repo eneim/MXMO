@@ -83,7 +83,7 @@ public class MemeActionFilter {
   private final MemeRealTimeDataFilter headActionFilter;
 
   public MemeActionFilter(GyroData calibGyroData) {
-    this.eyeActionFilter = new MemeRealTimeDataFilter(Source.EYE, calibGyroData);
+    this.eyeActionFilter = new MemeRealTimeDataFilter(Source.EYE, calibGyroData); // need separated calibated data
     this.headActionFilter = new MemeRealTimeDataFilter(Source.HEAD, calibGyroData);
   }
 }
