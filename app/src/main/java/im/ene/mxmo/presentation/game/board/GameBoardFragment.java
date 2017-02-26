@@ -17,18 +17,32 @@
 package im.ene.mxmo.presentation.game.board;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import im.ene.mxmo.common.BaseFragment;
 
 /**
  * Created by eneim on 2/26/17.
  */
 
-public class GameBoardFragment extends BaseFragment {
+public class GameBoardFragment extends BaseFragment implements GameBoardContract.GameView {
 
   public static GameBoardFragment newInstance() {
     Bundle args = new Bundle();
     GameBoardFragment fragment = new GameBoardFragment();
     fragment.setArguments(args);
     return fragment;
+  }
+
+  GameBoardContract.GamePresenter presenter;
+
+  @Override public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    presenter = new GamePresenterImpl();
+  }
+
+  @Override public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+    presenter.setView(this);
+    presenter.loadGameDB();
   }
 }

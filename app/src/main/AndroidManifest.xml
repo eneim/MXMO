@@ -33,7 +33,7 @@
       android:theme="@style/AppTheme.NoActionBar">
     <activity
         android:name=".presentation.game.GameActivity"
-        android:screenOrientation="landscape">
+        android:screenOrientation="sensorLandscape">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
 

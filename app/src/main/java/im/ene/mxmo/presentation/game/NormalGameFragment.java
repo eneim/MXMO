@@ -18,7 +18,10 @@ package im.ene.mxmo.presentation.game;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.View;
+import im.ene.mxmo.MemeApp;
+import java.util.UUID;
 
 /**
  * Created by eneim on 2/26/17.
@@ -29,5 +32,16 @@ public class NormalGameFragment extends GameFragment {
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
     overlayView.setVisibility(View.GONE);
+  }
+
+  @Override public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+    // TODO ask for username
+    if (TextUtils.isEmpty(MemeApp.getApp().getUserName())) {
+      MemeApp.getApp().setUserName("normal_user_" + UUID.randomUUID().toString());
+    }
+
+    setupEventBus(MemeApp.getApp().getUserName());
+    findGameOrCreateNew();
   }
 }

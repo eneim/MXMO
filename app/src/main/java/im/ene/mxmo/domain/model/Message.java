@@ -14,33 +14,31 @@
  * limitations under the License.
  */
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+package im.ene.mxmo.domain.model;
 
-buildscript {
-  repositories {
-    jcenter()
+/**
+ * Created by eneim on 2/26/17.
+ */
+
+public class Message {
+
+  private final String userName;
+
+  private String message; // current: only Emoji
+
+  public Message(String userName) {
+    this.userName = userName;
   }
 
-  dependencies {
-    classpath 'com.android.tools.build:gradle:2.3.0-rc1'
-
-    classpath 'com.google.gms:google-services:3.0.0'
-    classpath 'me.tatarka:gradle-retrolambda:3.5.0'
-    // NOTE: Do not place your application dependencies here; they belong
-    // in the individual module build.gradle files
+  public void setMessage(String message) {
+    this.message = message;
   }
-}
 
-allprojects {
-  repositories {
-    jcenter()
+  public String getUserName() {
+    return userName;
   }
-}
 
-task clean(type: Delete) {
-  delete rootProject.buildDir
-}
-
-task wrapper(type: Wrapper) {
-  gradleVersion = '3.4'
+  public String getMessage() {
+    return message;
+  }
 }

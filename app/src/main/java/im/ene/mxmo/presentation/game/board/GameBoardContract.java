@@ -14,33 +14,22 @@
  * limitations under the License.
  */
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+package im.ene.mxmo.presentation.game.board;
 
-buildscript {
-  repositories {
-    jcenter()
+/**
+ * Created by eneim on 2/26/17.
+ */
+
+public class GameBoardContract {
+
+  interface GameView {
+
   }
 
-  dependencies {
-    classpath 'com.android.tools.build:gradle:2.3.0-rc1'
+  interface GamePresenter {
 
-    classpath 'com.google.gms:google-services:3.0.0'
-    classpath 'me.tatarka:gradle-retrolambda:3.5.0'
-    // NOTE: Do not place your application dependencies here; they belong
-    // in the individual module build.gradle files
+    void setView(GameView view);
+
+    void loadGameDB();
   }
-}
-
-allprojects {
-  repositories {
-    jcenter()
-  }
-}
-
-task clean(type: Delete) {
-  delete rootProject.buildDir
-}
-
-task wrapper(type: Wrapper) {
-  gradleVersion = '3.4'
 }

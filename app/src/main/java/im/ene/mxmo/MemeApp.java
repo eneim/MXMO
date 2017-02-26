@@ -19,11 +19,31 @@ package im.ene.mxmo;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Logger;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.jins_jp.meme.MemeLib;
+import im.ene.mxmo.domain.model.TicTacToe;
 import im.ene.mxmo.presentation.game.GameMode;
+import java.lang.reflect.Type;
+import java.util.Map;
 
 /**
  * Created by eneim on 2/13/17.
+ *
+ * @since 1.0.0
+ *
+ * Game flow:
+ *
+ * 1. Start: ask for gamer mode: Normal User or Meme User.
+ *
+ * 1.1: If 'Normal user': prepare a Username based on UUID or Edit text, attach normal user view
+ * and
+ * init stuff from Firebase database.
+ * 1.2: If 'Meme user': process to scan for meme, prepare Username based on MemeId or Edit text,
+ * attache meme user view and init stuff from Firebase.
  */
 
 public class MemeApp extends Application {
@@ -34,7 +54,6 @@ public class MemeApp extends Application {
   public static final String KEY_GAME_MODE = "mxmo_game_mode";
 
   // end pref key
-
   public static final String TAG = "MemeApp";
 
   static final String APP_ID = "553494787374184";
@@ -50,9 +69,51 @@ public class MemeApp extends Application {
 
     MemeLib.setAppClientID(this, APP_ID, APP_SECRET);
     MemeLib.getInstance().setAutoConnect(false);
+
+    FirebaseDatabase.getInstance().setLogLevel(Logger.Level.DEBUG);
   }
 
-  public static SharedPreferences preferences() {
+  public static MemeApp getApp() {
+    return app;
+  }
+
+  public SharedPreferences preferences() {
     return app.getSharedPreferences(app.getPackageName() + "__meme", Context.MODE_PRIVATE);
+  }
+
+  // members
+  final Gson gson = new GsonBuilder().create();
+  final Type hashMapType = new TypeToken<Map<String, Object>>() {
+  }.getType();
+
+  TicTacToe currentGame;
+  String userName;
+
+  public Gson getGson() {
+    return gson;
+  }
+
+  public Map<String, Object> toHashMap(Object pojo) {
+    return gson.fromJson(gson.toJson(pojo), hashMapType);
+  }
+
+  public TicTacToe getCurrentGame() {
+    return currentGame;
+  }
+
+  public void setCurrentGame(TicTacToe currentGame) {
+    this.currentGame = currentGame;
+  }
+
+  public int getGameMode() {
+    return preferences().getInt(KEY_GAME_MODE, GameMode.MODE_NORMAL);
+  }
+
+  public String getUserName() {
+    return userName;
+  }
+
+  public void setUserName(String userName) {
+    this.userName = userName;
   }
 }
