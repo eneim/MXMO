@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package im.ene.mxmo.presentation.launch;
+package im.ene.mxmo.common.event;
 
-import android.os.Bundle;
-import com.jins_jp.meme.MemeLib;
-import im.ene.mxmo.R;
-import im.ene.mxmo.common.BaseActivity;
+import im.ene.mxmo.common.Event;
 
-public class LaunchActivity extends BaseActivity {
+/**
+ * Created by eneim on 2/24/17.
+ */
 
-  MemeLib memeLib;
+public class BluetoothConnectionEvent extends Event {
 
-  @Override protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_main);
-    memeLib = MemeLib.getInstance();
+  public final int state;
+  public final int prevState;
+
+  public BluetoothConnectionEvent(int state, int prevState) {
+    this.state = state;
+    this.prevState = prevState;
   }
 }
