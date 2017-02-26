@@ -17,7 +17,10 @@
 package im.ene.mxmo;
 
 import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
 import com.jins_jp.meme.MemeLib;
+import im.ene.mxmo.presentation.game.GameMode;
 
 /**
  * Created by eneim on 2/13/17.
@@ -25,14 +28,31 @@ import com.jins_jp.meme.MemeLib;
 
 public class MemeApp extends Application {
 
+  // begin pref key
+
+  // either '0' for normal or '1' for 'meme'
+  public static final String KEY_GAME_MODE = "mxmo_game_mode";
+
+  // end pref key
+
   public static final String TAG = "MemeApp";
 
   static final String APP_ID = "553494787374184";
   static final String APP_SECRET = "li6cou50dj3cvie17kovm4gh2g1fb0xt";
 
+  private static MemeApp app;
+
   @Override public void onCreate() {
     super.onCreate();
+    app = this;
+
+    preferences().edit().putInt(KEY_GAME_MODE, GameMode.MODE_NORMAL).apply();
+
     MemeLib.setAppClientID(this, APP_ID, APP_SECRET);
     MemeLib.getInstance().setAutoConnect(false);
+  }
+
+  public static SharedPreferences preferences() {
+    return app.getSharedPreferences(app.getPackageName() + "__meme", Context.MODE_PRIVATE);
   }
 }
