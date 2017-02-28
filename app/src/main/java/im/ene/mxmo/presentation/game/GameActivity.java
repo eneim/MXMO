@@ -36,16 +36,17 @@ public class GameActivity extends BaseActivity {
     super.onCreate(savedInstanceState);
     int userMode = MemeApp.getApp().getGameMode();
 
-    new AlertDialog.Builder(this).setTitle("Welcome to MxMo, please choose your MODE")
+    new AlertDialog.Builder(this).setTitle(
+        "Welcome to MxMo, please choose your mode (Meme User will require a Jins Meme to play):")
         .setSingleChoiceItems(new CharSequence[] { "Normal User", "Meme User" }, userMode,
-            (dialog, which) ->  //
-                MemeApp.getApp().preferences().edit().putInt(MemeApp.KEY_GAME_MODE, which).apply())
+            (dialog, which) -> MemeApp.getApp().setGameMode(which))
+        // Only one available button, and no cancelable. User must choose ...
         .setNeutralButton(android.R.string.ok, (dialog, which) -> dialog.dismiss())
         .setCancelable(false)
-        .setOnDismissListener(dialog -> //
-            getSupportFragmentManager().beginTransaction()
-                .replace(android.R.id.content, GameFragment.newInstance(getApp().getGameMode()))
-                .commit())
+        // Setup game on dismiss
+        .setOnDismissListener(dialog -> getSupportFragmentManager().beginTransaction()
+            .replace(android.R.id.content, GameFragment.newInstance(getApp().getGameMode()))
+            .commit())
         .create()
         .show();
   }
