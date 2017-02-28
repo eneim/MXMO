@@ -19,6 +19,7 @@ package im.ene.mxmo;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Logger;
 import com.google.gson.Gson;
@@ -48,12 +49,14 @@ import java.util.Map;
 
 public class MemeApp extends Application {
 
-  // begin pref key
-
+  /* begin pref key */
   // either '0' for normal or '1' for 'meme'
   public static final String KEY_GAME_MODE = "mxmo_game_mode";
 
-  // end pref key
+  // save username for future use
+  public static final String KEY_USER_NAME = "mxmo_user_name";
+  /* end pref key */
+
   public static final String TAG = "MemeApp";
 
   static final String APP_ID = "553494787374184";
@@ -77,7 +80,7 @@ public class MemeApp extends Application {
     return app;
   }
 
-  public SharedPreferences preferences() {
+  public final SharedPreferences preferences() {
     return app.getSharedPreferences(app.getPackageName() + "__meme", Context.MODE_PRIVATE);
   }
 
@@ -87,7 +90,7 @@ public class MemeApp extends Application {
   }.getType();
 
   TicTacToe currentGame;
-  String userName;
+  // String userName;
 
   public Gson getGson() {
     return gson;
@@ -105,15 +108,19 @@ public class MemeApp extends Application {
     this.currentGame = currentGame;
   }
 
+  public void setGameMode(int mode) {
+    preferences().edit().putInt(MemeApp.KEY_GAME_MODE, mode).apply();
+  }
+
   public int getGameMode() {
     return preferences().getInt(KEY_GAME_MODE, GameMode.MODE_NORMAL);
   }
 
-  public String getUserName() {
-    return userName;
+  @Nullable public String getUserName() {
+    return preferences().getString(KEY_USER_NAME, null);
   }
 
   public void setUserName(String userName) {
-    this.userName = userName;
+    preferences().edit().putString(KEY_USER_NAME, userName).apply();
   }
 }
