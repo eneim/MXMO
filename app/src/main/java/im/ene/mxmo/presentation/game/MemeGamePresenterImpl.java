@@ -18,6 +18,7 @@ package im.ene.mxmo.presentation.game;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import com.google.firebase.database.DatabaseReference;
 import com.jins_jp.meme.MemeConnectListener;
 import com.jins_jp.meme.MemeLib;
 import com.jins_jp.meme.MemeRealtimeData;
@@ -33,18 +34,22 @@ import io.reactivex.disposables.CompositeDisposable;
 /**
  * Created by eneim on 2/24/17.
  */
-class MemeGamePresenterImpl implements GameContract.MemeGamePresenter {
+class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.MemeGamePresenter {
 
   GameContract.MemeGameView view;
   MemeLib memeLib;
+  String memeId = null; // changed after connected
+
+  public MemeGamePresenterImpl(DatabaseReference gameDb) {
+    super(gameDb);
+  }
 
   private CompositeDisposable disposables = new CompositeDisposable();
 
-  @Override public void setView(GameContract.MemeGameView view) {
-    this.view = view;
+  @Override public void setView(GameContract.GameView view) {
+    this.view = (GameContract.MemeGameView) view;
     if (view != null) {
       memeLib = MemeLib.getInstance();
-      memeLib.setMemeConnectListener(new MemeConnectListenerImpl());
       memeLib.setResponseListener(new MemeResponseListenerImpl());
 
       disposables.add(RxBus.getBus()
@@ -82,11 +87,23 @@ class MemeGamePresenterImpl implements GameContract.MemeGamePresenter {
   }
 
   @Override public void connectToMeme(String memeId) {
+    this.memeId = memeId;
+    memeLib.setMemeConnectListener(new MemeConnectListenerImpl() {
+      @Override public void memeDisconnectCallback() {
+        MemeGamePresenterImpl.this.memeId = null;
+      }
+    });
     memeLib.connect(memeId);
   }
 
   @Override public void disconnectFromMeme() {
     memeLib.disconnect();
+  }
+
+  @Override public void setupGameUser() {
+    if (memeId != null && view != null) {
+      view.setupUserName("meme_user_" + memeId);
+    }
   }
 
   // Meme callback

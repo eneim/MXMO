@@ -96,8 +96,9 @@ public class MemeApp extends Application {
     return gson;
   }
 
-  public Map<String, Object> toHashMap(Object pojo) {
-    return gson.fromJson(gson.toJson(pojo), hashMapType);
+  public Map<String, Object> saveAndParseToHashMap(TicTacToe game) {
+    setCurrentGame(game);
+    return gson.fromJson(gson.toJson(game), hashMapType);
   }
 
   public TicTacToe getCurrentGame() {

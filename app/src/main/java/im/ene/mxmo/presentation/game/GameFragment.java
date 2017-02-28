@@ -16,36 +16,34 @@
 
 package im.ene.mxmo.presentation.game;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.util.Pair;
+import android.support.v7.app.AlertDialog;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.Toast;
 import butterknife.BindView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.gson.JsonElement;
 import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.R;
 import im.ene.mxmo.common.BaseFragment;
-import im.ene.mxmo.common.ChildEventListenerAdapter;
 import im.ene.mxmo.common.RxBus;
+import im.ene.mxmo.common.TextWatcherAdapter;
 import im.ene.mxmo.common.ValueEventListenerAdapter;
 import im.ene.mxmo.common.event.GameChangedEvent;
 import im.ene.mxmo.domain.model.TicTacToe;
 import im.ene.mxmo.presentation.game.board.GameBoardFragment;
 import im.ene.mxmo.presentation.game.chat.GameChatFragment;
-import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Function;
-import io.reactivex.schedulers.Schedulers;
 import java.util.HashMap;
-import java.util.Map;
 
 import static im.ene.mxmo.MemeApp.getApp;
 
@@ -53,9 +51,9 @@ import static im.ene.mxmo.MemeApp.getApp;
  * Created by eneim on 2/26/17.
  */
 
-public abstract class GameFragment extends BaseFragment {
+public abstract class GameFragment extends BaseFragment implements GameContract.GameView {
 
-  private static final String TAG = "MXMO:GameFragment";
+  @SuppressWarnings("unused") private static final String TAG = "MXMO:GameFragment";
 
   public static GameFragment newInstance(int gameMode) {
     GameFragment fragment;
@@ -74,7 +72,7 @@ public abstract class GameFragment extends BaseFragment {
     return fragment;
   }
 
-  private CompositeDisposable disposables = new CompositeDisposable();
+  private CompositeDisposable disposables;
 
   protected @BindView(R.id.overlay) View overlayView;
 
@@ -86,6 +84,7 @@ public abstract class GameFragment extends BaseFragment {
 
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
+    disposables = new CompositeDisposable();
 
     boardFragment = GameBoardFragment.newInstance();
     chatFragment = GameChatFragment.newInstance();
@@ -98,124 +97,131 @@ public abstract class GameFragment extends BaseFragment {
 
   @Override public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    gameDb = FirebaseDatabase.getInstance().getReference("games");
   }
 
   @Override public void onDestroyView() {
     super.onDestroyView();
     disposables.dispose();
+    disposables = null;
   }
 
   // Sync game with Firebase
 
-  protected TicTacToe game;
+  // protected TicTacToe game;
   protected GameBoardFragment boardFragment;
   protected GameChatFragment chatFragment;
-  protected DatabaseReference gameDb;
-  protected DatabaseReference gameRef;
+  // protected DatabaseReference gameDb;   // whole DB ref
+  // protected DatabaseReference gameRef;  // current game ref
 
-  protected final ValueEventListener gameFoundListener = new ValueEventListenerAdapter() {
-    @Override public void onDataChange(DataSnapshot snapshot) {
-      if (snapshot.getValue() instanceof HashMap<?, ?>) {
-        Observable.fromIterable(((HashMap<?, ?>) snapshot.getValue()).entrySet())
-            // each entry value must be a HashMap
-            .filter(entry -> entry.getValue() instanceof HashMap<?, ?>)
-            // then convert the entry to pair for ease
-            .map(new Function<Map.Entry<?, ?>, Pair<String, HashMap<?, ?>>>() {
-              @Override public Pair<String, HashMap<?, ?>> apply(Map.Entry<?, ?> entry)
-                  throws Exception {
-                return Pair.create(entry.getKey().toString(), (HashMap<?, ?>) entry.getValue());
-              }
-            })
-            // find all gameDb those are not finished
-            .filter(pair -> pair.second.containsKey("finished") &&  //
-                Boolean.FALSE.equals(pair.second.get("finished")))
-            // convert to TicTacToe POJO
-            .map(pair -> {
-              JsonElement jsonData = getApp().getGson().toJsonTree(pair.second);
-              return Pair.create(pair.first,
-                  getApp().getGson().fromJson(jsonData, TicTacToe.class));
-            })
-            // sort by create time, get the latest only
-            .sorted((o1, o2) -> Long.compare(o2.second.getCreatedAt(), o1.second.getCreatedAt()))
-            .subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
-            .first(new Pair<>("", TicTacToe.DEFAULT))
-            .subscribe(game -> {
-              gameDb.removeEventListener(this);
-              RxBus.getBus().send(new GameChangedEvent(gameDb.child(game.first), game.second));
-            });
-      } else {
-        gameDb.removeEventListener(this);
-        //noinspection ConstantConditions
-        RxBus.getBus().send(new GameChangedEvent(null, TicTacToe.DEFAULT));
-      }
+  // GameView interface
+
+  @Override public Context getViewContext() {
+    return getContext();
+  }
+
+  @Override public void setupUserName(@NonNull String defaultUserName) {
+    CharSequence userName = MemeApp.getApp().getUserName();
+    if (TextUtils.isEmpty(userName)) {
+      userName = defaultUserName;
     }
-  };
+
+    EditText editText = new EditText(getContext());
+    editText.setHint(userName);
+    CharSequence finalUserName = userName;
+    editText.addTextChangedListener(new TextWatcherAdapter() {
+      @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+        if (TextUtils.isEmpty(s)) {
+          editText.setHint(finalUserName);
+        } else {
+          editText.setHint("");
+        }
+      }
+    });
+
+    new AlertDialog.Builder(getContext()).setTitle("Choose your username for future use:")
+        .setView(editText)
+        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+          String name = editText.getText().toString();
+          if (TextUtils.isEmpty(name)) {
+            name = editText.getHint().toString().trim();
+          }
+          MemeApp.getApp().setUserName(name);
+          dialog.dismiss();
+        })
+        .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+          MemeApp.getApp().setUserName(defaultUserName);
+          dialog.dismiss();
+        })
+        .setOnDismissListener(dialog -> getPresenter().joinGameOrCreateNew())
+        .setCancelable(false)
+        .create()
+        .show();
+  }
 
   // must be call after onActivityCreated
 
   // this method must be called after Username has been decided
-  protected void setupEventBus(@NonNull String userName) {
+  @Override public void setupEventBus(@NonNull String userName) {
     disposables.add(RxBus.getBus()
         .observe(GameChangedEvent.class)
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(event -> {
           if (event.game == TicTacToe.DEFAULT) {
             // create new game
-            createGame(userName);
-          } else if (getApp().getCurrentGame() == null || // always get latest game
+            getPresenter().createGame(userName);
+          } else if (getApp().getCurrentGame() == null || //
               getApp().getCurrentGame().getCreatedAt() < event.game.getCreatedAt()) {
-            this.gameRef = event.gameRef;
-            this.game = event.game;
-            // to cache
+            // save to cache
             getApp().setCurrentGame(event.game);
-            if (!MemeApp.getApp().getUserName() //
-                .equals(this.game.getFirstUser())) { // I didn't create this game, so I join
-              joinGame(MemeApp.getApp().getUserName());
+            getPresenter().setGame(event.game, event.gameRef);
+
+            AlertDialog dialog =
+                new AlertDialog.Builder(getContext()).setTitle("Welcome to new TicTacToe Game.")
+                    .setMessage("You are the first User, please wait for other User to join.")
+                    .setCancelable(false)
+                    .setNegativeButton(android.R.string.cancel,
+                        (dialog1, which) -> dialog1.dismiss())
+                    .create();
+
+            event.gameRef.addValueEventListener(new ValueEventListenerAdapter() {
+              @Override public void onDataChange(DataSnapshot snapshot) {
+                if (snapshot.getValue() != null) {
+                  Object firstUser = ((HashMap) snapshot.getValue()).get("firstUser");
+                  Object secondUser = ((HashMap) snapshot.getValue()).get("secondUser");
+                  if (firstUser != null && secondUser != null) {  // both in
+                    if (dialog.isShowing()) {
+                      dialog.setOnDismissListener(null);
+                      dialog.dismiss();
+                    }
+                    event.gameRef.removeEventListener(this);
+                    getPresenter().onGameAbleToStart();
+                  } else {
+                    waitForUser(dialog, event.gameRef, this);
+                  }
+                }
+              }
+            });
+            // I didn't create this game, so I join
+            if (!userName.equals(event.game.getFirstUser())) {
+              getPresenter().joinGame(userName);
             }
           }
         }));
   }
 
-  protected final void findGameOrCreateNew() {
-    // initialize game state
-    gameDb.addValueEventListener(gameFoundListener);
-  }
-
-  protected final void joinGame(String userName) {
-    // at this point, game's secondUser is empty, so update it and start the game.
-    this.game.setSecondUser(userName);
-    gameRef = gameDb.child(gameRef.getKey());
-    gameRef.addValueEventListener(new ValueEventListenerAdapter() {
-      @Override public void onDataChange(DataSnapshot dataSnapshot) {
-        super.onDataChange(dataSnapshot);
-      }
+  void waitForUser(AlertDialog dialog, DatabaseReference ref, ValueEventListener listener) {
+    dialog.setOnDismissListener(dialog1 -> {
+      ref.removeEventListener(listener);
+      getActivity().finish();
     });
-
-    gameRef.updateChildren(MemeApp.getApp().toHashMap(this.game));
+    if (!dialog.isShowing()) {
+      dialog.show();
+    }
   }
 
-  // The user who creates the game will be the first user.
-  protected final void createGame(String userName) {
-    TicTacToe newGame = new TicTacToe();
-    newGame.setFinished(false);
-    newGame.setFirstUser(userName);
-
-    gameDb.orderByChild("createdAt")
-        .equalTo(newGame.getCreatedAt())
-        .limitToLast(1)
-        .addChildEventListener(new ChildEventListenerAdapter() {
-          @Override public void onChildAdded(DataSnapshot snapshot, String s) {
-            gameDb.removeEventListener(this);
-            if (snapshot != null && snapshot.getValue() != null) {
-              JsonElement jsonData = getApp().getGson().toJsonTree(snapshot.getValue());
-              TicTacToe currentGame = getApp().getGson().fromJson(jsonData, TicTacToe.class);
-              RxBus.getBus().send(new GameChangedEvent(snapshot.getRef(), currentGame));
-            }
-          }
-        });
-
-    gameDb.push().setValue(newGame);
+  @Override public void letTheGameBegin() {
+    Toast.makeText(getContext(), "Game Started", Toast.LENGTH_SHORT).show();
   }
+
+  @NonNull protected abstract GameContract.Presenter getPresenter();
 }

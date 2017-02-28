@@ -17,11 +17,10 @@
 package im.ene.mxmo.presentation.game;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 import android.view.View;
-import im.ene.mxmo.MemeApp;
-import java.util.UUID;
+import com.google.firebase.database.FirebaseDatabase;
 
 /**
  * Created by eneim on 2/26/17.
@@ -29,19 +28,28 @@ import java.util.UUID;
 
 public class NormalGameFragment extends GameFragment {
 
+  private GameContract.Presenter presenter;
+
+  @NonNull @Override protected GameContract.Presenter getPresenter() {
+    if (presenter == null) {
+      presenter = new GamePresenterImpl(FirebaseDatabase.getInstance().getReference("games"));
+    }
+    return presenter;
+  }
+
+  @Override public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    getPresenter();
+  }
+
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
     overlayView.setVisibility(View.GONE);
+    presenter.setView(this);
   }
 
   @Override public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    // TODO ask for username
-    if (TextUtils.isEmpty(MemeApp.getApp().getUserName())) {
-      MemeApp.getApp().setUserName("normal_user_" + UUID.randomUUID().toString());
-    }
-
-    setupEventBus(MemeApp.getApp().getUserName());
-    findGameOrCreateNew();
+    presenter.setupGameUser();
   }
 }

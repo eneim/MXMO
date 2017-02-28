@@ -18,10 +18,12 @@ package im.ene.mxmo.presentation.game;
 
 import android.bluetooth.BluetoothAdapter;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,9 +35,16 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
 
   private GameContract.MemeGamePresenter presenter;
 
+  @NonNull @Override protected GameContract.Presenter getPresenter() {
+    if (presenter == null) {
+      presenter = new MemeGamePresenterImpl(FirebaseDatabase.getInstance().getReference("games"));
+    }
+    return presenter;
+  }
+
   @Override public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    presenter = new MemeGamePresenterImpl();
+    getPresenter();
   }
 
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -105,6 +114,6 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
 
   @Override public void onMemeConnected(boolean connected) {
     overlayView.setVisibility(View.GONE);
-    // TODO
+    presenter.setupGameUser();
   }
 }

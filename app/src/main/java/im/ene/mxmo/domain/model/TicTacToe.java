@@ -43,6 +43,8 @@ public class TicTacToe {
   // Meme user --> meme_user_{meme_id}
   private String secondUser;
 
+  private boolean started;
+
   private boolean finished;
 
   private List<String> cells = new ArrayList<>(9); // size of 9, state of cells
@@ -71,6 +73,14 @@ public class TicTacToe {
 
   public void setFinished(boolean finished) {
     this.finished = finished;
+  }
+
+  public boolean isStarted() {
+    return started;
+  }
+
+  public void setStarted(boolean started) {
+    this.started = started;
   }
 
   public List<String> getCells() {
