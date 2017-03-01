@@ -39,17 +39,17 @@ import static im.ene.mxmo.MemeApp.getApp;
  * Created by eneim on 2/27/17.
  */
 
-public class GamePresenterImpl implements GameContract.Presenter {
+class GamePresenterImpl implements GameContract.Presenter {
 
   @SuppressWarnings("unused") private static final String TAG = "MXMO:GamePresenter";
 
   GameContract.GameView view;
 
   protected TicTacToe game;
-  protected final DatabaseReference gameDb;   // whole DB ref
-  protected DatabaseReference gameRef;  // current game ref
+  final DatabaseReference gameDb;   // whole DB ref
+  DatabaseReference gameRef;  // current game ref
 
-  public GamePresenterImpl(DatabaseReference gameDb) {
+  GamePresenterImpl(DatabaseReference gameDb) {
     this.gameDb = gameDb;
   }
 

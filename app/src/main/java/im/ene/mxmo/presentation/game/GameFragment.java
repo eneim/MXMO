@@ -16,10 +16,12 @@
 
 package im.ene.mxmo.presentation.game;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -73,7 +75,6 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
   }
 
   private CompositeDisposable disposables;
-
   protected @BindView(R.id.overlay) View overlayView;
 
   @Nullable @Override
@@ -93,10 +94,6 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
         .replace(R.id.game_board, boardFragment)
         .replace(R.id.game_chat, chatFragment)
         .commit();
-  }
-
-  @Override public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
   }
 
   @Override public void onDestroyView() {
@@ -125,7 +122,11 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
       userName = defaultUserName;
     }
 
-    EditText editText = new EditText(getContext());
+    @SuppressLint("InflateParams")  //
+        TextInputLayout inputLayout = (TextInputLayout) getActivity().getLayoutInflater()
+        .inflate(R.layout.widget_edit_text, null);
+    inputLayout.setHint("Username");
+    EditText editText = (EditText) inputLayout.findViewById(R.id.edit_text);
     editText.setHint(userName);
     CharSequence finalUserName = userName;
     editText.addTextChangedListener(new TextWatcherAdapter() {
@@ -138,24 +139,25 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
       }
     });
 
-    new AlertDialog.Builder(getContext()).setTitle("Choose your username for future use:")
-        .setView(editText)
-        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-          String name = editText.getText().toString();
-          if (TextUtils.isEmpty(name)) {
-            name = editText.getHint().toString().trim();
-          }
-          MemeApp.getApp().setUserName(name);
-          dialog.dismiss();
-        })
-        .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
-          MemeApp.getApp().setUserName(defaultUserName);
-          dialog.dismiss();
-        })
-        .setOnDismissListener(dialog -> getPresenter().joinGameOrCreateNew())
-        .setCancelable(false)
-        .create()
-        .show();
+    AlertDialog alertDialog =
+        new AlertDialog.Builder(getContext()).setMessage("Choose your username for future use:")
+            .setView(inputLayout)
+            .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+              String name = editText.getText().toString();
+              if (TextUtils.isEmpty(name)) {
+                name = editText.getHint().toString().trim();
+              }
+              MemeApp.getApp().setUserName(name);
+              dialog.dismiss();
+            })
+            .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+              MemeApp.getApp().setUserName(defaultUserName);
+              dialog.dismiss();
+            })
+            .setOnDismissListener(dialog -> getPresenter().joinGameOrCreateNew())
+            .setCancelable(false)
+            .create();
+    alertDialog.show();
   }
 
   // must be call after onActivityCreated

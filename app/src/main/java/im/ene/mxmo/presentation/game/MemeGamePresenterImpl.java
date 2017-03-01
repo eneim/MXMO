@@ -40,7 +40,7 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
   MemeLib memeLib;
   String memeId = null; // changed after connected
 
-  public MemeGamePresenterImpl(DatabaseReference gameDb) {
+  MemeGamePresenterImpl(DatabaseReference gameDb) {
     super(gameDb);
   }
 

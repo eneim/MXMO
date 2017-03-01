@@ -50,7 +50,7 @@ public class GamePresenterImpl implements GameBoardContract.GamePresenter {
         }
       };
 
-      database.getReference().addValueEventListener(dbValueListener);
+      // database.getReference().addValueEventListener(dbValueListener);
     } else {
       if (dbValueListener != null) {
         database.getReference().removeEventListener(dbValueListener);
