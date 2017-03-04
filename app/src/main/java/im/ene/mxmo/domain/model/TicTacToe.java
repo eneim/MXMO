@@ -87,7 +87,7 @@ public class TicTacToe {
     return cells;
   }
 
-  @Deprecated public void setCells(List<String> cells) {
+  @Deprecated public void setCells(ArrayList<String> cells) {
     this.cells = cells;
   }
 

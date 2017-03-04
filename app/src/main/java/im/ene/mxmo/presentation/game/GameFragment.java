@@ -23,6 +23,8 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
+import android.util.Log;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,7 +44,8 @@ import static im.ene.mxmo.MemeApp.getApp;
  *
  * @since 1.0.0
  */
-public abstract class GameFragment extends BaseFragment implements GameContract.GameView {
+public abstract class GameFragment extends BaseFragment
+    implements GameContract.GameView, GameBoardFragment.BoardStateChangeListener {
 
   @SuppressWarnings("unused") private static final String TAG = "MXMO:GameFragment";
 
@@ -90,14 +93,6 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
         .setCancelable(false)
         .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss())
         .create();
-
-    boardFragment = GameBoardFragment.newInstance();
-    chatFragment = GameChatFragment.newInstance();
-
-    getChildFragmentManager().beginTransaction()
-        .replace(R.id.game_board, boardFragment)
-        .replace(R.id.game_chat, chatFragment)
-        .commit();
   }
 
   @Override public void onDestroyView() {
@@ -172,8 +167,23 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
     }
     Toast.makeText(getContext(), "Game Started", Toast.LENGTH_SHORT).show();
 
-    // TODO
+    boardFragment = GameBoardFragment.newInstance();
+    boardFragment.setTargetFragment(this, 100);
+    chatFragment = GameChatFragment.newInstance();
+    chatFragment.setTargetFragment(this, 100);
+
+    getChildFragmentManager().beginTransaction()
+        .replace(R.id.game_board, boardFragment)
+        .replace(R.id.game_chat, chatFragment)
+        .commit();
   }
 
   @NonNull protected abstract GameContract.Presenter getPresenter();
+
+  // Other interfaces
+
+  @Override public void onBoardState(SparseArray<String> gameState) {
+    Log.d(TAG, "onBoardState() called with: gameState = [" + gameState + "]");
+    getPresenter().updateGameState(gameState);
+  }
 }

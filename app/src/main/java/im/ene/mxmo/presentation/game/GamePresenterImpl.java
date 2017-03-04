@@ -18,9 +18,12 @@ package im.ene.mxmo.presentation.game;
 
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
+import android.util.Log;
+import android.util.SparseArray;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
 import com.google.gson.JsonElement;
 import im.ene.mxmo.common.ChildEventListenerAdapter;
 import im.ene.mxmo.common.RxBus;
@@ -32,9 +35,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static im.ene.mxmo.MemeApp.getApp;
@@ -51,7 +52,6 @@ class GamePresenterImpl implements GameContract.Presenter {
 
   @SuppressWarnings("WeakerAccess") GameContract.GameView view;
   @SuppressWarnings("WeakerAccess") CompositeDisposable disposables;
-  private List<ValueEventListener> listeners = new ArrayList<>();
 
   protected TicTacToe game;
   @SuppressWarnings("WeakerAccess") @NonNull final DatabaseReference gameDb;
@@ -186,6 +186,28 @@ class GamePresenterImpl implements GameContract.Presenter {
     this.gameRef.updateChildren(getApp().parseToHashMap(this.game));
   }
 
+  ChildEventListener childEventListener = new ChildEventListener() {
+    @Override public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+      Log.i(TAG, "onChildAdded: " + dataSnapshot);
+    }
+
+    @Override public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+      Log.i(TAG, "onChildChanged: " + dataSnapshot);
+    }
+
+    @Override public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+    }
+
+    @Override public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+    }
+
+    @Override public void onCancelled(DatabaseError databaseError) {
+
+    }
+  };
+
   @SuppressWarnings("WeakerAccess") void onGameAbleToStart() {
     this.gameRef.addListenerForSingleValueEvent(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot dataSnapshot) {
@@ -193,9 +215,22 @@ class GamePresenterImpl implements GameContract.Presenter {
           view.showHideOverLay(false);
           view.letTheGameBegin();
         }
+        gameRef.addChildEventListener(childEventListener);
       }
     });
     this.game.setStarted(true);
+    for (int i = 0; i < 9; i++) {
+      this.game.getCells().add("?");
+    }
     this.gameRef.updateChildren(getApp().parseToHashMap(this.game));
+  }
+
+  @Override public void updateGameState(SparseArray<String> state) {
+    this.game.getCells().clear();
+    for (int i = 0; i < state.size(); i++) {
+      this.game.getCells().add(state.get(i));
+    }
+
+    this.gameRef.child("cells").setValue(game.getCells());
   }
 }

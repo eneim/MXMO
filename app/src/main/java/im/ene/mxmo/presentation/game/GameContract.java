@@ -17,6 +17,7 @@
 package im.ene.mxmo.presentation.game;
 
 import android.app.Activity;
+import android.util.SparseArray;
 
 /**
  * Created by eneim on 2/24/17.
@@ -42,6 +43,8 @@ class GameContract {
     void initGame();
 
     void onUserName(String userName);
+
+    void updateGameState(SparseArray<String> state);
   }
 
   interface MemeGameView extends GameView {
