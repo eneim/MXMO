@@ -195,4 +195,8 @@ public abstract class GameFragment extends BaseFragment
     Log.d(TAG, "onUserMove() called with: gameState = [" + gameState + "]");
     getPresenter().updateGameStateAfterUserMode(gameState);
   }
+
+  @Override public boolean isMyTurnNow() {
+    return getPresenter().getUserSide() == getPresenter().getCurrentTurn();
+  }
 }

@@ -18,11 +18,10 @@ package im.ene.mxmo.presentation.game;
 
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
-import android.util.Log;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.JsonElement;
 import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.common.ChildEventListenerAdapter;
@@ -197,43 +196,25 @@ class GamePresenterImpl implements GameContract.Presenter {
     return getApp().getUserName().equals(this.game.getFirstUser());
   }
 
-  ChildEventListener childEventListener = new ChildEventListener() {
-    @Override public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-      Log.i(TAG, "onChildAdded: " + dataSnapshot);
-    }
+  @NonNull @Override public Boolean getCurrentTurn() {
+    return Boolean.TRUE.equals(game.getCurrentTurn());
+  }
 
-    @Override public void onChildChanged(DataSnapshot snapshot, String s) {
-      if (snapshot != null && !"createdAt".equals(snapshot.getKey())) {
-        if ("cells".equals(snapshot.getKey())) {
-          Object object = snapshot.getValue();
-          List<String> cells = null;
-          if (object instanceof HashMap) {
-            //noinspection unchecked
-            HashMap<Integer, String> board = (HashMap<Integer, String>) object;
-            cells = new ArrayList<>(board.size());
-            for (Map.Entry<Integer, String> entry : board.entrySet()) {
-              cells.set(entry.getKey(), entry.getValue());
-            }
-          } else if (object instanceof ArrayList) {
-            //noinspection unchecked
-            ArrayList<String> board = (ArrayList<String>) object;
-            cells = new ArrayList<>(board.size());
-            cells.addAll(board);
-          }
-
-          if (cells != null && cells.size() == 9) {
-            view.updateGameState(cells, getUserSide() == game.getCurrentTurn());
-          }
+  ValueEventListener valueEventListener = new ValueEventListener() {
+    @Override public void onDataChange(DataSnapshot snapshot) {
+      if (snapshot != null && snapshot.getValue() != null) {
+        JsonElement json = getApp().getGson().toJsonTree(snapshot.getValue());
+        TicTacToe temp = getApp().getGson().fromJson(json, TicTacToe.class);
+        boolean userInput = getUserSide() == !temp.getCurrentTurn();
+        game.setCurrentTurn(temp.getCurrentTurn());
+        game.getCells().clear();
+        game.getCells().addAll(temp.getCells());
+        game.getMessages().clear();
+        game.getMessages().addAll(temp.getMessages());
+        if (view != null) {
+          view.updateGameState(game.getCells(), userInput);
         }
       }
-    }
-
-    @Override public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-    }
-
-    @Override public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
     }
 
     @Override public void onCancelled(DatabaseError databaseError) {
@@ -248,11 +229,11 @@ class GamePresenterImpl implements GameContract.Presenter {
           view.showHideOverLay(false);
           view.letTheGameBegin();
         }
-        gameRef.addChildEventListener(childEventListener);
+        gameRef.addValueEventListener(valueEventListener);
       }
     });
     this.game.setStarted(true);
-    this.game.setCurrentTurn(Math.random() < 0.5 /* trick to set this as random */);
+    this.game.setCurrentTurn(Boolean.TRUE); // always TRUE, less headache ...
     for (int i = 0; i < 9; i++) {
       this.game.getCells().add(MemeApp.INVALID);
     }
@@ -272,18 +253,18 @@ class GamePresenterImpl implements GameContract.Presenter {
     return this.game.getCells();
   }
 
+  private int[][] lines = {
+      { 0, 1, 2 }, { 3, 4, 5 }, { 6, 7, 8 },  //
+      { 0, 3, 6 }, { 1, 4, 7 }, { 2, 5, 8 },  //
+      { 0, 4, 8 }, { 2, 4, 6 },
+  };
+
   @Override public String judge() {
     String[] users = { game.getFirstUser(), game.getSecondUser() };
-    int partnerIndex = getUserSide() ? 1 : 0;
+    int myIndex = getUserSide() ? 0 : 1;
     // try with last turn, before the update
     String userToJudge = !game.getCurrentTurn() /* previous turn */ == getUserSide() ? //
-        users[1 - partnerIndex] : users[partnerIndex];
-
-    int[][] lines = {
-        { 0, 1, 2 }, { 3, 4, 5 }, { 6, 7, 8 },  //
-        { 0, 3, 6 }, { 1, 4, 7 }, { 2, 5, 8 },  //
-        { 0, 4, 8 }, { 2, 4, 6 },
-    };
+        users[myIndex] : users[1 - myIndex];
 
     // check for partnerId
     for (int[] line : lines) {

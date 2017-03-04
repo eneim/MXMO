@@ -71,7 +71,9 @@ public class GameBoardFragment extends BaseFragment implements GameBoardContract
     super.onCreate(savedInstanceState);
     if (getArguments() != null) {
       side = getArguments().getBoolean(ARG_USER_SIDE);
-      gameState = getArguments().getStringArrayList(ARG_GAME_STATE);
+      ArrayList<String> temp = getArguments().getStringArrayList(ARG_GAME_STATE);
+      //noinspection ConstantConditions
+      gameState = new ArrayList<>(temp);
     }
 
     presenter = new GamePresenterImpl();
@@ -88,12 +90,16 @@ public class GameBoardFragment extends BaseFragment implements GameBoardContract
           listener.onUserMove(adapter.getGameState());
         }
       }
+
+      @Override boolean cellCheckable(View view, int pos) {
+        return listener != null && listener.isMyTurnNow();
+      }
     });
 
     recyclerView.setLayoutManager(layoutManager);
     recyclerView.setAdapter(adapter);
 
-    adapter.setCursorPosition(4);
+    adapter.setCursorPosition(4, false);
     presenter.setView(this);
     presenter.loadGameDB();
   }
@@ -105,14 +111,11 @@ public class GameBoardFragment extends BaseFragment implements GameBoardContract
   }
 
   public void syncBoard(List<String> boardToSync, boolean userInput) {
-    boolean change = !(boardToSync.size() == gameState.size());
-    if (!change) {
-      for (int i = 0; i < gameState.size(); i++) {
-        if (!gameState.get(i).equals(boardToSync.get(i))) {
-          gameState.set(i, boardToSync.get(i));
-          change = true;
-          break;
-        }
+    boolean change = false;
+    for (int i = 0; i < gameState.size(); i++) {
+      if (!gameState.get(i).equals(boardToSync.get(i))) {
+        gameState.set(i, boardToSync.get(i));
+        change = true;
       }
     }
 
@@ -124,5 +127,7 @@ public class GameBoardFragment extends BaseFragment implements GameBoardContract
   public interface BoardStateChangeListener {
 
     void onUserMove(List<String> gameState);
+
+    boolean isMyTurnNow();
   }
 }

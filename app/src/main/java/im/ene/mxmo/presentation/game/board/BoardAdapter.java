@@ -16,10 +16,12 @@
 
 package im.ene.mxmo.presentation.game.board;
 
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.common.OnItemClickListener;
 import java.util.List;
 
@@ -35,19 +37,30 @@ class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
 
   private int cursorPosition = RecyclerView.NO_POSITION;  // move over by meme action
 
+  RecyclerView parent;
   final List<String> states;
   final Boolean side; // TRUE for FALSE;
 
-  OnItemClickListener itemClickListener;
+  OnItemClickListener listener;
 
   @SuppressWarnings("WeakerAccess")
   public void setItemClickListener(OnItemClickListener itemClickListener) {
-    this.itemClickListener = itemClickListener;
+    this.listener = itemClickListener;
   }
 
   BoardAdapter(Boolean side, List<String> states) {
     this.side = side;
     this.states = states;
+  }
+
+  @Override public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+    super.onAttachedToRecyclerView(recyclerView);
+    this.parent = recyclerView;
+  }
+
+  @Override public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+    super.onDetachedFromRecyclerView(recyclerView);
+    this.parent = null;
   }
 
   @Override public BoardCellViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -56,11 +69,18 @@ class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
     final BoardCellViewHolder viewHolder = new BoardCellViewHolder(view);
     viewHolder.button.setOnClickListener(v -> {
       int pos = viewHolder.getAdapterPosition();
-      if (itemClickListener != null && pos != RecyclerView.NO_POSITION) {
-        check(pos, getApp().getUserName());
-        itemClickListener.onItemClick(this, viewHolder, v, pos, getItemId(pos));
+      if (pos != RecyclerView.NO_POSITION && listener != null //
+          && (listener instanceof ItemClickHandler && //
+          ((ItemClickHandler) listener).cellCheckable(v, pos))) {
+        if (MemeApp.INVALID.equals(states.get(pos))) {
+          check(pos, getApp().getUserName());
+          listener.onItemClick(this, viewHolder, v, pos, getItemId(pos));
+        } else {
+          Snackbar.make(parent, "ERROR: Cell has been checked!!", Snackbar.LENGTH_SHORT).show();
+        }
       }
     });
+
     return viewHolder;
   }
 
@@ -76,21 +96,42 @@ class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
    * Call this to update current board state.
    *
    * @param pos checked position
-   * @param value TRUE or FALSE, base on User side
+   * @param userName TRUE or FALSE, base on User side
    */
-  void check(int pos, String userName) {
+  @SuppressWarnings("WeakerAccess") void check(int pos, String userName) {
     if (pos >= 0 && pos < getItemCount()) {
       states.set(pos, userName);
-      setCursorPosition(pos);
+      setCursorPosition(pos, true);
     }
   }
 
-  void setCursorPosition(int pos) {
+  boolean manuallyCheck(int pos) {
+    if (MemeApp.INVALID.equals(states.get(pos))) {
+      check(pos, getApp().getUserName());
+      return true;
+    } else {
+      if (parent != null) {
+        Snackbar.make(parent, "ERROR: Cell has been checked!!", Snackbar.LENGTH_SHORT).show();
+      }
+
+      return false;
+    }
+  }
+
+  void setCursorPosition(int pos, boolean forceUpdate) {
+    boolean changed = false;
     if (pos != cursorPosition && pos >= 0 && pos < getItemCount()) {
       int oldCurPos = cursorPosition;
       this.cursorPosition = pos;
       notifyItemChanged(pos);
       notifyItemChanged(oldCurPos);
+      changed = true;
+    }
+
+    if (!changed) {
+      if (forceUpdate) {
+        notifyItemChanged(pos);
+      }
     }
   }
 
@@ -105,6 +146,8 @@ class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
   static abstract class ItemClickHandler implements OnItemClickListener {
 
     abstract void onChecked(View view, int pos);
+
+    abstract boolean cellCheckable(View view, int pos);
 
     @Override
     public void onItemClick(RecyclerView.Adapter adapter, RecyclerView.ViewHolder viewHolder,

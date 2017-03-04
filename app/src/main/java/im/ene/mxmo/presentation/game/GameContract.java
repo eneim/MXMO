@@ -52,6 +52,8 @@ class GameContract {
 
     @NonNull Boolean getUserSide();
 
+    @NonNull Boolean getCurrentTurn();
+
     ArrayList<String> getGameState();
 
     /**

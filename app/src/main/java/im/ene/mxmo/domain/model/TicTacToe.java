@@ -113,4 +113,40 @@ public class TicTacToe {
   }
 
   public static final TicTacToe DEFAULT = new TicTacToe(-1);
+
+  @Override public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof TicTacToe)) return false;
+
+    TicTacToe ticTacToe = (TicTacToe) o;
+
+    if (createdAt != ticTacToe.createdAt) return false;
+    if (started != ticTacToe.started) return false;
+    if (finished != ticTacToe.finished) return false;
+    if (firstUser != null ? !firstUser.equals(ticTacToe.firstUser) : ticTacToe.firstUser != null) {
+      return false;
+    }
+    if (secondUser != null ? !secondUser.equals(ticTacToe.secondUser)
+        : ticTacToe.secondUser != null) {
+      return false;
+    }
+    if (currentTurn != null ? !currentTurn.equals(ticTacToe.currentTurn)
+        : ticTacToe.currentTurn != null) {
+      return false;
+    }
+    if (!cells.equals(ticTacToe.cells)) return false;
+    return messages.equals(ticTacToe.messages);
+  }
+
+  @Override public int hashCode() {
+    int result = (int) (createdAt ^ (createdAt >>> 32));
+    result = 31 * result + (firstUser != null ? firstUser.hashCode() : 0);
+    result = 31 * result + (secondUser != null ? secondUser.hashCode() : 0);
+    result = 31 * result + (started ? 1 : 0);
+    result = 31 * result + (finished ? 1 : 0);
+    result = 31 * result + (currentTurn != null ? currentTurn.hashCode() : 0);
+    result = 31 * result + cells.hashCode();
+    result = 31 * result + messages.hashCode();
+    return result;
+  }
 }
