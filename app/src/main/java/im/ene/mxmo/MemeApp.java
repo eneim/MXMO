@@ -69,10 +69,6 @@ public class MemeApp extends Application {
     app = this;
 
     preferences().edit().putInt(KEY_GAME_MODE, GameMode.MODE_NORMAL).apply();
-
-    MemeLib.setAppClientID(this, APP_ID, APP_SECRET);
-    MemeLib.getInstance().setAutoConnect(false);
-
     FirebaseDatabase.getInstance().setLogLevel(Logger.Level.DEBUG);
   }
 
@@ -84,29 +80,24 @@ public class MemeApp extends Application {
     return app.getSharedPreferences(app.getPackageName() + "__meme", Context.MODE_PRIVATE);
   }
 
+  public void initMemeLib() {
+    MemeLib.setAppClientID(this, APP_ID, APP_SECRET);
+    MemeLib.getInstance().setAutoConnect(false);
+  }
+
   // members
   final Gson gson = new GsonBuilder().create();
   final Type hashMapType = new TypeToken<Map<String, Object>>() {
   }.getType();
 
-  TicTacToe currentGame;
   // String userName;
 
   public Gson getGson() {
     return gson;
   }
 
-  public Map<String, Object> saveAndParseToHashMap(TicTacToe game) {
-    setCurrentGame(game);
+  public Map<String, Object> parseToHashMap(TicTacToe game) {
     return gson.fromJson(gson.toJson(game), hashMapType);
-  }
-
-  public TicTacToe getCurrentGame() {
-    return currentGame;
-  }
-
-  public void setCurrentGame(TicTacToe currentGame) {
-    this.currentGame = currentGame;
   }
 
   public void setGameMode(int mode) {

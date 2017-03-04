@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.JsonElement;
 import im.ene.mxmo.common.ChildEventListenerAdapter;
 import im.ene.mxmo.common.RxBus;
@@ -28,51 +29,76 @@ import im.ene.mxmo.common.event.GameChangedEvent;
 import im.ene.mxmo.domain.model.TicTacToe;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static im.ene.mxmo.MemeApp.getApp;
 
 /**
  * Created by eneim on 2/27/17.
+ *
+ * @since 1.0.0
  */
 
 class GamePresenterImpl implements GameContract.Presenter {
 
   @SuppressWarnings("unused") private static final String TAG = "MXMO:GamePresenter";
 
-  GameContract.GameView view;
+  @SuppressWarnings("WeakerAccess") GameContract.GameView view;
+  @SuppressWarnings("WeakerAccess") CompositeDisposable disposables;
+  private List<ValueEventListener> listeners = new ArrayList<>();
 
   protected TicTacToe game;
-  final DatabaseReference gameDb;   // whole DB ref
-  DatabaseReference gameRef;  // current game ref
+  @SuppressWarnings("WeakerAccess") @NonNull final DatabaseReference gameDb;
+  @SuppressWarnings("WeakerAccess") DatabaseReference gameRef;
 
-  GamePresenterImpl(DatabaseReference gameDb) {
+  GamePresenterImpl(@NonNull DatabaseReference gameDb) {
     this.gameDb = gameDb;
+    this.disposables = new CompositeDisposable();
   }
 
   @Override public void setView(GameContract.GameView view) {
     this.view = view;
-  }
-
-  @Override public void setupGameUser() {
-    if (view != null) {
-      view.setupUserName("normal_user_" + System.currentTimeMillis());
-    }
-  }
-
-  @Override public void joinGameOrCreateNew() {
     if (view == null) {
-      return;
+      setGame(null, null);
+      disposables.dispose();
+    } else {
+      disposables.add(RxBus.getBus().observe(GameChangedEvent.class)  //
+          .observeOn(AndroidSchedulers.mainThread()).subscribe(event -> {
+            if (event.game == TicTacToe.DEFAULT) {  // default unknown game
+              // There is no available game yet, I create new game with my prefer username
+              createGame(event.userName);
+            } else {
+              // Set current game and database.
+              // At this point, there is at least one user joined the game.
+              setGame(event.game, event.gameRef);
+              if (!event.userName.equals(event.game.getFirstUser())) {
+                // I didn't create this game, so I join
+                joinGame(event.userName);
+              } else {
+                // I created the game, so I need to wait for the second player to join
+                waitForSecondPlayer();
+              }
+            }
+          }));
     }
+  }
 
-    //noinspection ConstantConditions
-    view.setupEventBus(getApp().getUserName());
+  @Override public void initGame() {
+    if (view != null) {
+      view.showUserNameInputDialog("normal_user_" + System.currentTimeMillis());
+    }
+  }
 
-    // Find latest game on Firebase.
-    gameDb.addListenerForSingleValueEvent(new ValueEventListenerAdapter() {
+  // Call after username was set
+  @Override public void onUserName(String userName) {
+    // Query an available game on Firebase, create new if there is no one.
+    this.gameDb.addListenerForSingleValueEvent(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot snapshot) {
         //noinspection Convert2MethodRef,ConstantConditions
         Observable.just(snapshot)
@@ -81,26 +107,26 @@ class GamePresenterImpl implements GameContract.Presenter {
             .flatMapIterable((Function<HashMap, Iterable<Map.Entry>>) map -> map.entrySet())
             .filter(entry -> entry.getValue() instanceof HashMap)
             .map(entry -> Pair.create(entry.getKey().toString(), (HashMap) entry.getValue()))
-            .filter(p -> Boolean.FALSE.equals(p.second.get("finished")) &&  //
-                !Boolean.TRUE.equals(p.second.get("started")) &&  // either null or false
-                (p.second.get("secondUser") == null || p.second.get("firstUser") == null))
+            .filter(pair -> Boolean.FALSE.equals(pair.second.get("finished")) // not finished yet
+                && !Boolean.TRUE.equals(pair.second.get("started")) // not started yet
+                && (pair.second.get("secondUser") == null || pair.second.get("firstUser") == null))
             .map(pair -> {
               JsonElement json = getApp().getGson().toJsonTree(pair.second);
               return Pair.create(pair.first, getApp().getGson().fromJson(json, TicTacToe.class));
             })
             .sorted((o1, o2) -> Long.compare(o2.second.getCreatedAt(), o1.second.getCreatedAt()))
-            .subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
             .first(new Pair<>(null, TicTacToe.DEFAULT))
             .filter(pair -> pair.first != null)
-            .map(game -> new GameChangedEvent(gameDb.child(game.first), game.second))
-            .defaultIfEmpty(new GameChangedEvent(null, TicTacToe.DEFAULT))
-            .subscribe(game -> RxBus.getBus().send(game));
+            .map(game -> new GameChangedEvent(userName, gameDb.child(game.first), game.second))
+            .defaultIfEmpty(new GameChangedEvent(userName, null, TicTacToe.DEFAULT))
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(event -> RxBus.getBus().send(event));
       }
     });
   }
 
-  @Override public void createGame(String userName) {
+  @SuppressWarnings("WeakerAccess") void createGame(String userName) {
     TicTacToe newGame = new TicTacToe();
     newGame.setStarted(false);
     newGame.setFinished(false);
@@ -115,7 +141,7 @@ class GamePresenterImpl implements GameContract.Presenter {
             if (snapshot != null && snapshot.getValue() != null) {
               JsonElement jsonData = getApp().getGson().toJsonTree(snapshot.getValue());
               TicTacToe currentGame = getApp().getGson().fromJson(jsonData, TicTacToe.class);
-              RxBus.getBus().send(new GameChangedEvent(snapshot.getRef(), currentGame));
+              RxBus.getBus().send(new GameChangedEvent(userName, snapshot.getRef(), currentGame));
             }
           }
         });
@@ -123,23 +149,43 @@ class GamePresenterImpl implements GameContract.Presenter {
     gameDb.push().setValue(newGame);
   }
 
-  @Override public void setGame(TicTacToe game, DatabaseReference gameRef) {
+  @SuppressWarnings("WeakerAccess") void setGame(TicTacToe game, DatabaseReference gameRef) {
     this.game = game;
     this.gameRef = gameRef;
   }
 
-  @Override public void joinGame(@NonNull String userName) {
+  @SuppressWarnings("WeakerAccess") void waitForSecondPlayer() {
+    this.gameRef.addValueEventListener(new ValueEventListenerAdapter() {
+      @Override public void onDataChange(DataSnapshot snapshot) {
+        if (snapshot.getValue() != null) {
+          Object firstUser = ((HashMap) snapshot.getValue()).get("firstUser");
+          Object secondUser = ((HashMap) snapshot.getValue()).get("secondUser");
+          if (firstUser != null && secondUser != null) {  // both Users are in
+            gameRef.removeEventListener(this);
+            onGameAbleToStart();
+          } else {
+            if (view != null) {
+              view.showWaitForSecondUserDialog();
+            }
+          }
+        }
+      }
+    });
+  }
+
+  @SuppressWarnings("WeakerAccess") void joinGame(@NonNull String userName) {
     this.gameRef.addValueEventListener(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot dataSnapshot) {
         gameRef.removeEventListener(this);
+        onGameAbleToStart();
       }
     });
     // at this point, game's secondUser is empty, so update it and start the game.
     this.game.setSecondUser(userName);
-    this.gameRef.updateChildren(getApp().saveAndParseToHashMap(this.game));
+    this.gameRef.updateChildren(getApp().parseToHashMap(this.game));
   }
 
-  @Override public void onGameAbleToStart() {
+  @SuppressWarnings("WeakerAccess") void onGameAbleToStart() {
     this.gameRef.addListenerForSingleValueEvent(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot dataSnapshot) {
         if (view != null) {
@@ -148,6 +194,6 @@ class GamePresenterImpl implements GameContract.Presenter {
       }
     });
     this.game.setStarted(true);
-    this.gameRef.updateChildren(getApp().saveAndParseToHashMap(this.game));
+    this.gameRef.updateChildren(getApp().parseToHashMap(this.game));
   }
 }

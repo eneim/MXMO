@@ -27,11 +27,15 @@ import im.ene.mxmo.domain.model.TicTacToe;
 
 public class GameChangedEvent extends Event {
 
+  @NonNull public final String userName;
+
   @NonNull public final DatabaseReference gameRef;
 
   @NonNull public final TicTacToe game;
 
-  public GameChangedEvent(@NonNull DatabaseReference gameRef, @NonNull TicTacToe game) {
+  public GameChangedEvent(@NonNull String userName, @NonNull DatabaseReference gameRef,
+      @NonNull TicTacToe game) {
+    this.userName = userName;
     this.gameRef = gameRef;
     this.game = game;
   }

@@ -17,24 +17,18 @@
 package im.ene.mxmo.presentation.game;
 
 import android.app.Activity;
-import android.content.Context;
-import android.support.annotation.NonNull;
-import com.google.firebase.database.DatabaseReference;
-import im.ene.mxmo.domain.model.TicTacToe;
 
 /**
  * Created by eneim on 2/24/17.
  */
 
-public class GameContract {
+class GameContract {
 
   interface GameView {
 
-    void setupUserName(String defaultUserName);
+    void showUserNameInputDialog(String defaultUserName);
 
-    Context getViewContext();
-
-    void setupEventBus(@NonNull String userName);
+    void showWaitForSecondUserDialog();
 
     void letTheGameBegin();
   }
@@ -43,17 +37,9 @@ public class GameContract {
 
     void setView(GameView view);
 
-    void setupGameUser();
+    void initGame();
 
-    void joinGameOrCreateNew();
-
-    void createGame(String userName);
-
-    void joinGame(@NonNull String userName);
-
-    void setGame(TicTacToe game, DatabaseReference gameRef);
-
-    void onGameAbleToStart();
+    void onUserName(String userName);
   }
 
   interface MemeGameView extends GameView {

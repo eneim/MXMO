@@ -37,11 +37,6 @@ public class NormalGameFragment extends GameFragment {
     return presenter;
   }
 
-  @Override public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    getPresenter();
-  }
-
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
     overlayView.setVisibility(View.GONE);
@@ -50,6 +45,6 @@ public class NormalGameFragment extends GameFragment {
 
   @Override public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    presenter.setupGameUser();
+    presenter.initGame();
   }
 }

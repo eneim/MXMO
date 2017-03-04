@@ -27,6 +27,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
+import static im.ene.mxmo.MemeApp.getApp;
+
 /**
  * Created by eneim on 2/26/17.
  */
@@ -44,7 +46,7 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
 
   @Override public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    getPresenter();
+    getApp().initMemeLib();
   }
 
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -114,6 +116,6 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
 
   @Override public void onMemeConnected(boolean connected) {
     overlayView.setVisibility(View.GONE);
-    presenter.setupGameUser();
+    presenter.initGame();
   }
 }

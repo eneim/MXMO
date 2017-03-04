@@ -17,7 +17,6 @@
 package im.ene.mxmo.presentation.game;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -30,29 +29,20 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 import butterknife.BindView;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
-import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.R;
 import im.ene.mxmo.common.BaseFragment;
-import im.ene.mxmo.common.RxBus;
 import im.ene.mxmo.common.TextWatcherAdapter;
-import im.ene.mxmo.common.ValueEventListenerAdapter;
-import im.ene.mxmo.common.event.GameChangedEvent;
-import im.ene.mxmo.domain.model.TicTacToe;
 import im.ene.mxmo.presentation.game.board.GameBoardFragment;
 import im.ene.mxmo.presentation.game.chat.GameChatFragment;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import java.util.HashMap;
 
 import static im.ene.mxmo.MemeApp.getApp;
 
 /**
  * Created by eneim on 2/26/17.
+ *
+ * @since 1.0.0
  */
-
 public abstract class GameFragment extends BaseFragment implements GameContract.GameView {
 
   @SuppressWarnings("unused") private static final String TAG = "MXMO:GameFragment";
@@ -75,7 +65,19 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
   }
 
   private CompositeDisposable disposables;
+
   protected @BindView(R.id.overlay) View overlayView;
+  AlertDialog welcomeDialog;
+  protected GameBoardFragment boardFragment;
+  protected GameChatFragment chatFragment;
+
+  @Override public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    //noinspection ConstantConditions
+    if (getPresenter() == null) {
+      throw new NullPointerException("Presenter must not be null.");
+    }
+  }
 
   @Nullable @Override
   public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -86,6 +88,13 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
     disposables = new CompositeDisposable();
+
+    welcomeDialog = new AlertDialog.Builder(getContext()) //
+        .setTitle("Welcome to new TicTacToe Game.")
+        .setMessage("You are the first User, please wait for other User to join.")
+        .setCancelable(false)
+        .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss())
+        .create();
 
     boardFragment = GameBoardFragment.newInstance();
     chatFragment = GameChatFragment.newInstance();
@@ -100,35 +109,25 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
     super.onDestroyView();
     disposables.dispose();
     disposables = null;
+    getPresenter().setView(null);
   }
-
-  // Sync game with Firebase
-
-  // protected TicTacToe game;
-  protected GameBoardFragment boardFragment;
-  protected GameChatFragment chatFragment;
-  // protected DatabaseReference gameDb;   // whole DB ref
-  // protected DatabaseReference gameRef;  // current game ref
 
   // GameView interface
 
-  @Override public Context getViewContext() {
-    return getContext();
-  }
-
-  @Override public void setupUserName(@NonNull String defaultUserName) {
-    CharSequence userName = MemeApp.getApp().getUserName();
-    if (TextUtils.isEmpty(userName)) {
-      userName = defaultUserName;
+  @Override public void showUserNameInputDialog(String defaultUserName) {
+    CharSequence currentUserName = getApp().getUserName();
+    if (TextUtils.isEmpty(currentUserName)) {
+      currentUserName = defaultUserName;
     }
 
-    @SuppressLint("InflateParams")  //
-        TextInputLayout inputLayout = (TextInputLayout) getActivity().getLayoutInflater()
-        .inflate(R.layout.widget_edit_text, null);
+    @SuppressLint("InflateParams") TextInputLayout inputLayout =
+        (TextInputLayout) getActivity().getLayoutInflater()
+            .inflate(R.layout.widget_edit_text, null);
     inputLayout.setHint("Username");
+
     EditText editText = (EditText) inputLayout.findViewById(R.id.edit_text);
-    editText.setHint(userName);
-    CharSequence finalUserName = userName;
+    editText.setHint(currentUserName);
+    CharSequence finalUserName = currentUserName;
     editText.addTextChangedListener(new TextWatcherAdapter() {
       @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
         if (TextUtils.isEmpty(s)) {
@@ -139,89 +138,40 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
       }
     });
 
-    AlertDialog alertDialog =
-        new AlertDialog.Builder(getContext()).setMessage("Choose your username for future use:")
-            .setView(inputLayout)
-            .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-              String name = editText.getText().toString();
-              if (TextUtils.isEmpty(name)) {
-                name = editText.getHint().toString().trim();
-              }
-              MemeApp.getApp().setUserName(name);
-              dialog.dismiss();
-            })
-            .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
-              MemeApp.getApp().setUserName(defaultUserName);
-              dialog.dismiss();
-            })
-            .setOnDismissListener(dialog -> getPresenter().joinGameOrCreateNew())
-            .setCancelable(false)
-            .create();
-    alertDialog.show();
-  }
-
-  // must be call after onActivityCreated
-
-  // this method must be called after Username has been decided
-  @Override public void setupEventBus(@NonNull String userName) {
-    disposables.add(RxBus.getBus()
-        .observe(GameChangedEvent.class)
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(event -> {
-          if (event.game == TicTacToe.DEFAULT) {
-            // create new game
-            getPresenter().createGame(userName);
-          } else if (getApp().getCurrentGame() == null || //
-              getApp().getCurrentGame().getCreatedAt() < event.game.getCreatedAt()) {
-            // save to cache
-            getApp().setCurrentGame(event.game);
-            getPresenter().setGame(event.game, event.gameRef);
-
-            AlertDialog dialog =
-                new AlertDialog.Builder(getContext()).setTitle("Welcome to new TicTacToe Game.")
-                    .setMessage("You are the first User, please wait for other User to join.")
-                    .setCancelable(false)
-                    .setNegativeButton(android.R.string.cancel,
-                        (dialog1, which) -> dialog1.dismiss())
-                    .create();
-
-            event.gameRef.addValueEventListener(new ValueEventListenerAdapter() {
-              @Override public void onDataChange(DataSnapshot snapshot) {
-                if (snapshot.getValue() != null) {
-                  Object firstUser = ((HashMap) snapshot.getValue()).get("firstUser");
-                  Object secondUser = ((HashMap) snapshot.getValue()).get("secondUser");
-                  if (firstUser != null && secondUser != null) {  // both in
-                    if (dialog.isShowing()) {
-                      dialog.setOnDismissListener(null);
-                      dialog.dismiss();
-                    }
-                    event.gameRef.removeEventListener(this);
-                    getPresenter().onGameAbleToStart();
-                  } else {
-                    waitForUser(dialog, event.gameRef, this);
-                  }
-                }
-              }
-            });
-            // I didn't create this game, so I join
-            if (!userName.equals(event.game.getFirstUser())) {
-              getPresenter().joinGame(userName);
-            }
+    new AlertDialog.Builder(getContext()).setMessage("Choose your username for future use:")
+        .setView(inputLayout)
+        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+          String name = editText.getText().toString();
+          if (TextUtils.isEmpty(name)) {
+            name = editText.getHint().toString().trim();
           }
-        }));
+          getApp().setUserName(name);
+          dialog.dismiss();
+        })
+        .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+          getApp().setUserName(defaultUserName);
+          dialog.dismiss();
+        })
+        .setNeutralButton("Quit", (dialog, which) -> getActivity().finish())  // quit
+        .setOnDismissListener(dialog -> getPresenter().onUserName(getApp().getUserName()))
+        .setCancelable(false)
+        .create()
+        .show();
   }
 
-  void waitForUser(AlertDialog dialog, DatabaseReference ref, ValueEventListener listener) {
-    dialog.setOnDismissListener(dialog1 -> {
-      ref.removeEventListener(listener);
-      getActivity().finish();
-    });
-    if (!dialog.isShowing()) {
-      dialog.show();
+  @Override public void showWaitForSecondUserDialog() {
+    welcomeDialog.setOnDismissListener(__ -> getActivity().finish());
+
+    if (!welcomeDialog.isShowing()) {
+      welcomeDialog.show();
     }
   }
 
   @Override public void letTheGameBegin() {
+    if (welcomeDialog.isShowing()) {
+      welcomeDialog.setOnDismissListener(null);
+      welcomeDialog.dismiss();
+    }
     Toast.makeText(getContext(), "Game Started", Toast.LENGTH_SHORT).show();
   }
 

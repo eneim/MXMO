@@ -19,7 +19,6 @@ package im.ene.mxmo.presentation.game;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
-import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.common.BaseActivity;
 
 import static im.ene.mxmo.MemeApp.getApp;
@@ -34,12 +33,11 @@ public class GameActivity extends BaseActivity {
 
   @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    int userMode = MemeApp.getApp().getGameMode();
-
+    int userMode = getApp().getGameMode();
     new AlertDialog.Builder(this).setTitle("Welcome to MxMo!")
         .setMessage("Please choose your mode (Meme User will require a Jins Meme to play):")
         .setSingleChoiceItems(new CharSequence[] { "Normal User", "Meme User" }, userMode,
-            (dialog, which) -> MemeApp.getApp().setGameMode(which))
+            (dialog, which) -> getApp().setGameMode(which))
         // Only one available button, and no cancelable. User must choose ...
         .setNeutralButton(android.R.string.ok, (dialog, which) -> dialog.dismiss())
         .setCancelable(false)

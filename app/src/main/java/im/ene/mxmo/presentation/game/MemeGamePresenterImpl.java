@@ -100,9 +100,9 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
     memeLib.disconnect();
   }
 
-  @Override public void setupGameUser() {
+  @Override public void initGame() {
     if (memeId != null && view != null) {
-      view.setupUserName("meme_user_" + memeId);
+      view.showUserNameInputDialog("meme_user_" + memeId);
     }
   }
 
