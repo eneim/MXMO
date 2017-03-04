@@ -19,9 +19,11 @@ package im.ene.mxmo.presentation.game;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.JsonElement;
+import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.common.ChildEventListenerAdapter;
 import im.ene.mxmo.common.RxBus;
 import im.ene.mxmo.common.ValueEventListenerAdapter;
@@ -51,7 +53,6 @@ class GamePresenterImpl implements GameContract.Presenter {
 
   @SuppressWarnings("WeakerAccess") GameContract.GameView view;
   @SuppressWarnings("WeakerAccess") CompositeDisposable disposables;
-  private List<ValueEventListener> listeners = new ArrayList<>();
 
   protected TicTacToe game;
   @SuppressWarnings("WeakerAccess") @NonNull final DatabaseReference gameDb;
@@ -91,6 +92,7 @@ class GamePresenterImpl implements GameContract.Presenter {
 
   @Override public void initGame() {
     if (view != null) {
+      view.showHideOverLay(true);
       view.showUserNameInputDialog("normal_user_" + System.currentTimeMillis());
     }
   }
@@ -157,10 +159,12 @@ class GamePresenterImpl implements GameContract.Presenter {
   @SuppressWarnings("WeakerAccess") void waitForSecondPlayer() {
     this.gameRef.addValueEventListener(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot snapshot) {
-        if (snapshot.getValue() != null) {
+        if (snapshot.getValue() != null && snapshot.getValue() instanceof HashMap) {
           Object firstUser = ((HashMap) snapshot.getValue()).get("firstUser");
           Object secondUser = ((HashMap) snapshot.getValue()).get("secondUser");
           if (firstUser != null && secondUser != null) {  // both Users are in
+            game.setFirstUser(firstUser.toString());
+            game.setSecondUser(secondUser.toString());
             gameRef.removeEventListener(this);
             onGameAbleToStart();
           } else {
@@ -185,15 +189,97 @@ class GamePresenterImpl implements GameContract.Presenter {
     this.gameRef.updateChildren(getApp().parseToHashMap(this.game));
   }
 
+  // First User: TRUE, Second User: FALSE
+  @NonNull @Override public Boolean getUserSide() {
+    if (getApp().getUserName() == null) {
+      throw new IllegalStateException("Username must be set first!!!");
+    }
+
+    return getApp().getUserName().equals(this.game.getFirstUser());
+  }
+
+  @NonNull @Override public Boolean getCurrentTurn() {
+    return Boolean.TRUE.equals(game.getCurrentTurn());
+  }
+
+  ValueEventListener valueEventListener = new ValueEventListener() {
+    @Override public void onDataChange(DataSnapshot snapshot) {
+      if (snapshot != null && snapshot.getValue() != null) {
+        JsonElement json = getApp().getGson().toJsonTree(snapshot.getValue());
+        TicTacToe temp = getApp().getGson().fromJson(json, TicTacToe.class);
+        boolean userInput = getUserSide() == !temp.getCurrentTurn();
+        game.setCurrentTurn(temp.getCurrentTurn());
+        game.getCells().clear();
+        game.getCells().addAll(temp.getCells());
+        game.getMessages().clear();
+        game.getMessages().addAll(temp.getMessages());
+        if (view != null) {
+          view.updateGameState(game.getCells(), userInput);
+        }
+      }
+    }
+
+    @Override public void onCancelled(DatabaseError databaseError) {
+
+    }
+  };
+
   @SuppressWarnings("WeakerAccess") void onGameAbleToStart() {
     this.gameRef.addListenerForSingleValueEvent(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot dataSnapshot) {
         if (view != null) {
+          view.showHideOverLay(false);
           view.letTheGameBegin();
         }
+        gameRef.addValueEventListener(valueEventListener);
       }
     });
     this.game.setStarted(true);
+    this.game.setCurrentTurn(Boolean.TRUE); // always TRUE, less headache ...
+    for (int i = 0; i < 9; i++) {
+      this.game.getCells().add(MemeApp.INVALID);
+    }
     this.gameRef.updateChildren(getApp().parseToHashMap(this.game));
+  }
+
+  @Override public void updateGameStateAfterUserMode(List<String> state) {
+    this.game.setCurrentTurn(!this.game.getCurrentTurn());
+    for (int i = 0; i < state.size(); i++) {
+      this.game.getCells().set(i, state.get(i));
+    }
+
+    this.gameRef.updateChildren(getApp().parseToHashMap(this.game));
+  }
+
+  @Override public ArrayList<String> getGameState() {
+    return this.game.getCells();
+  }
+
+  private int[][] lines = {
+      { 0, 1, 2 }, { 3, 4, 5 }, { 6, 7, 8 },  //
+      { 0, 3, 6 }, { 1, 4, 7 }, { 2, 5, 8 },  //
+      { 0, 4, 8 }, { 2, 4, 6 },
+  };
+
+  @Override public String judge() {
+    String[] users = { game.getFirstUser(), game.getSecondUser() };
+    int myIndex = getUserSide() ? 0 : 1;
+    // try with last turn, before the update
+    String userToJudge = !game.getCurrentTurn() /* previous turn */ == getUserSide() ? //
+        users[myIndex] : users[1 - myIndex];
+
+    // check for partnerId
+    for (int[] line : lines) {
+      boolean win = true;
+      for (int i : line) {
+        win &= game.getCells().get(i).equals(userToJudge);
+      }
+
+      if (win) {
+        return userToJudge;
+      }
+    }
+
+    return null;
   }
 }

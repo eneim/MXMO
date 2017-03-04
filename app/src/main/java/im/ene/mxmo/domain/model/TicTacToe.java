@@ -17,7 +17,6 @@
 package im.ene.mxmo.domain.model;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by eneim on 2/26/17.
@@ -47,9 +46,11 @@ public class TicTacToe {
 
   private boolean finished;
 
-  private List<String> cells = new ArrayList<>(9); // size of 9, state of cells
+  private Boolean currentTurn;  // TRUE: first user, FALSE: second user
 
-  private List<Message> messages = new ArrayList<>();
+  private ArrayList<String> cells = new ArrayList<>(9); // size of 9, state of cells
+
+  private ArrayList<Message> messages = new ArrayList<>();
 
   public String getFirstUser() {
     return firstUser;
@@ -83,11 +84,11 @@ public class TicTacToe {
     this.started = started;
   }
 
-  public List<String> getCells() {
+  public ArrayList<String> getCells() {
     return cells;
   }
 
-  @Deprecated public void setCells(List<String> cells) {
+  @Deprecated public void setCells(ArrayList<String> cells) {
     this.cells = cells;
   }
 
@@ -95,13 +96,57 @@ public class TicTacToe {
     return createdAt;
   }
 
-  public List<Message> getMessages() {
+  public ArrayList<Message> getMessages() {
     return messages;
   }
 
-  @Deprecated public void setMessages(List<Message> messages) {
+  @Deprecated public void setMessages(ArrayList<Message> messages) {
     this.messages = messages;
   }
 
+  public Boolean getCurrentTurn() {
+    return currentTurn;
+  }
+
+  public void setCurrentTurn(Boolean currentTurn) {
+    this.currentTurn = currentTurn;
+  }
+
   public static final TicTacToe DEFAULT = new TicTacToe(-1);
+
+  @Override public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof TicTacToe)) return false;
+
+    TicTacToe ticTacToe = (TicTacToe) o;
+
+    if (createdAt != ticTacToe.createdAt) return false;
+    if (started != ticTacToe.started) return false;
+    if (finished != ticTacToe.finished) return false;
+    if (firstUser != null ? !firstUser.equals(ticTacToe.firstUser) : ticTacToe.firstUser != null) {
+      return false;
+    }
+    if (secondUser != null ? !secondUser.equals(ticTacToe.secondUser)
+        : ticTacToe.secondUser != null) {
+      return false;
+    }
+    if (currentTurn != null ? !currentTurn.equals(ticTacToe.currentTurn)
+        : ticTacToe.currentTurn != null) {
+      return false;
+    }
+    if (!cells.equals(ticTacToe.cells)) return false;
+    return messages.equals(ticTacToe.messages);
+  }
+
+  @Override public int hashCode() {
+    int result = (int) (createdAt ^ (createdAt >>> 32));
+    result = 31 * result + (firstUser != null ? firstUser.hashCode() : 0);
+    result = 31 * result + (secondUser != null ? secondUser.hashCode() : 0);
+    result = 31 * result + (started ? 1 : 0);
+    result = 31 * result + (finished ? 1 : 0);
+    result = 31 * result + (currentTurn != null ? currentTurn.hashCode() : 0);
+    result = 31 * result + cells.hashCode();
+    result = 31 * result + messages.hashCode();
+    return result;
+  }
 }

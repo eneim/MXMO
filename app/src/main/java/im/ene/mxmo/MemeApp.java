@@ -20,8 +20,6 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Logger;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -49,6 +47,8 @@ import java.util.Map;
 
 public class MemeApp extends Application {
 
+  public static final String INVALID = "?";
+
   /* begin pref key */
   // either '0' for normal or '1' for 'meme'
   public static final String KEY_GAME_MODE = "mxmo_game_mode";
@@ -69,7 +69,7 @@ public class MemeApp extends Application {
     app = this;
 
     preferences().edit().putInt(KEY_GAME_MODE, GameMode.MODE_NORMAL).apply();
-    FirebaseDatabase.getInstance().setLogLevel(Logger.Level.DEBUG);
+    // FirebaseDatabase.getInstance().setLogLevel(Logger.Level.DEBUG);
   }
 
   public static MemeApp getApp() {

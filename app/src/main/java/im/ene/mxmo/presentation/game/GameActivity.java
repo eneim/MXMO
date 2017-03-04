@@ -31,21 +31,35 @@ import static im.ene.mxmo.MemeApp.getApp;
 
 public class GameActivity extends BaseActivity {
 
+  AlertDialog welcomeDialog;
+  AlertDialog userModeChooserDialog;
+
   @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     int userMode = getApp().getGameMode();
-    new AlertDialog.Builder(this).setTitle("Welcome to MxMo!")
-        .setMessage("Please choose your mode (Meme User will require a Jins Meme to play):")
-        .setSingleChoiceItems(new CharSequence[] { "Normal User", "Meme User" }, userMode,
-            (dialog, which) -> getApp().setGameMode(which))
-        // Only one available button, and no cancelable. User must choose ...
-        .setNeutralButton(android.R.string.ok, (dialog, which) -> dialog.dismiss())
+    userModeChooserDialog = new AlertDialog.Builder(this)
+        .setTitle("Select user mode:")
+        .setSingleChoiceItems(
+        new CharSequence[] { "Normal User", "Meme User" }, userMode,
+        (dialog, which) -> getApp().setGameMode(which))
+        .setNeutralButton(android.R.string.ok, (dialog, which) -> //
+            getSupportFragmentManager().beginTransaction()
+                .replace(android.R.id.content, GameFragment.newInstance(getApp().getGameMode()))
+                .commit())
         .setCancelable(false)
-        // Setup game on dismiss
-        .setOnDismissListener(dialog -> getSupportFragmentManager().beginTransaction()
-            .replace(android.R.id.content, GameFragment.newInstance(getApp().getGameMode()))
-            .commit())
-        .create()
-        .show();
+        .create();
+
+    welcomeDialog = new AlertDialog.Builder(this).setTitle("Welcome to MxMo!")
+        .setMessage("Please choose your mode (Meme User will require a Jins Meme to play)")
+        .setNeutralButton(android.R.string.ok, (dialog, which) -> dialog.dismiss())
+        .setOnDismissListener(dialog -> {
+          if (!userModeChooserDialog.isShowing()) {
+            userModeChooserDialog.show();
+          }
+        })
+        .setCancelable(false)
+        .create();
+
+    welcomeDialog.show();
   }
 }

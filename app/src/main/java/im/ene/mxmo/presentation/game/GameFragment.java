@@ -23,6 +23,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +35,7 @@ import im.ene.mxmo.common.BaseFragment;
 import im.ene.mxmo.common.TextWatcherAdapter;
 import im.ene.mxmo.presentation.game.board.GameBoardFragment;
 import im.ene.mxmo.presentation.game.chat.GameChatFragment;
-import io.reactivex.disposables.CompositeDisposable;
+import java.util.List;
 
 import static im.ene.mxmo.MemeApp.getApp;
 
@@ -43,7 +44,8 @@ import static im.ene.mxmo.MemeApp.getApp;
  *
  * @since 1.0.0
  */
-public abstract class GameFragment extends BaseFragment implements GameContract.GameView {
+public abstract class GameFragment extends BaseFragment
+    implements GameContract.GameView, GameBoardFragment.BoardStateChangeListener {
 
   @SuppressWarnings("unused") private static final String TAG = "MXMO:GameFragment";
 
@@ -63,8 +65,6 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
     fragment.setArguments(args);
     return fragment;
   }
-
-  private CompositeDisposable disposables;
 
   protected @BindView(R.id.overlay) View overlayView;
   AlertDialog welcomeDialog;
@@ -87,32 +87,25 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
 
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    disposables = new CompositeDisposable();
-
     welcomeDialog = new AlertDialog.Builder(getContext()) //
         .setTitle("Welcome to new TicTacToe Game.")
         .setMessage("You are the first User, please wait for other User to join.")
         .setCancelable(false)
         .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss())
         .create();
-
-    boardFragment = GameBoardFragment.newInstance();
-    chatFragment = GameChatFragment.newInstance();
-
-    getChildFragmentManager().beginTransaction()
-        .replace(R.id.game_board, boardFragment)
-        .replace(R.id.game_chat, chatFragment)
-        .commit();
   }
 
   @Override public void onDestroyView() {
     super.onDestroyView();
-    disposables.dispose();
-    disposables = null;
     getPresenter().setView(null);
   }
 
   // GameView interface
+
+  @Override public void showHideOverLay(boolean willShow) {
+    int overlayViewVisibility = willShow ? View.VISIBLE : View.GONE;
+    overlayView.setVisibility(overlayViewVisibility);
+  }
 
   @Override public void showUserNameInputDialog(String defaultUserName) {
     CharSequence currentUserName = getApp().getUserName();
@@ -173,7 +166,37 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
       welcomeDialog.dismiss();
     }
     Toast.makeText(getContext(), "Game Started", Toast.LENGTH_SHORT).show();
+
+    boardFragment =
+        GameBoardFragment.newInstance(getPresenter().getUserSide(), getPresenter().getGameState());
+    boardFragment.setTargetFragment(this, 100);
+    chatFragment = GameChatFragment.newInstance();
+    chatFragment.setTargetFragment(this, 101);
+
+    getChildFragmentManager().beginTransaction()
+        .replace(R.id.game_board, boardFragment)
+        .replace(R.id.game_chat, chatFragment)
+        .commit();
+  }
+
+  @Override public void updateGameState(List<String> cells, boolean userInput) {
+    boardFragment.syncBoard(cells, userInput);
+    String winner = getPresenter().judge();
+    if (winner != null) {
+      Toast.makeText(getContext(), "Winner: " + winner, Toast.LENGTH_SHORT).show();
+    }
   }
 
   @NonNull protected abstract GameContract.Presenter getPresenter();
+
+  // Other interfaces
+
+  @Override public void onUserMove(List<String> gameState) {
+    Log.d(TAG, "onUserMove() called with: gameState = [" + gameState + "]");
+    getPresenter().updateGameStateAfterUserMode(gameState);
+  }
+
+  @Override public boolean isMyTurnNow() {
+    return getPresenter().getUserSide() == getPresenter().getCurrentTurn();
+  }
 }
