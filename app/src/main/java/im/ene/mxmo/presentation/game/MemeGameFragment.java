@@ -115,7 +115,6 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
   }
 
   @Override public void onMemeConnected(boolean connected) {
-    overlayView.setVisibility(View.GONE);
     presenter.initGame();
   }
 }

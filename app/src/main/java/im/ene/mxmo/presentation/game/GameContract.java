@@ -26,6 +26,8 @@ class GameContract {
 
   interface GameView {
 
+    void showHideOverLay(boolean willShow);
+
     void showUserNameInputDialog(String defaultUserName);
 
     void showWaitForSecondUserDialog();

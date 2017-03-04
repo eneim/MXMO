@@ -39,7 +39,6 @@ public class NormalGameFragment extends GameFragment {
 
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    overlayView.setVisibility(View.GONE);
     presenter.setView(this);
   }
 

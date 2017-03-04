@@ -114,6 +114,11 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
 
   // GameView interface
 
+  @Override public void showHideOverLay(boolean willShow) {
+    int overlayViewVisibility = willShow ? View.VISIBLE : View.GONE;
+    overlayView.setVisibility(overlayViewVisibility);
+  }
+
   @Override public void showUserNameInputDialog(String defaultUserName) {
     CharSequence currentUserName = getApp().getUserName();
     if (TextUtils.isEmpty(currentUserName)) {
@@ -173,6 +178,8 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
       welcomeDialog.dismiss();
     }
     Toast.makeText(getContext(), "Game Started", Toast.LENGTH_SHORT).show();
+
+    // TODO
   }
 
   @NonNull protected abstract GameContract.Presenter getPresenter();

@@ -91,6 +91,7 @@ class GamePresenterImpl implements GameContract.Presenter {
 
   @Override public void initGame() {
     if (view != null) {
+      view.showHideOverLay(true);
       view.showUserNameInputDialog("normal_user_" + System.currentTimeMillis());
     }
   }
@@ -189,6 +190,7 @@ class GamePresenterImpl implements GameContract.Presenter {
     this.gameRef.addListenerForSingleValueEvent(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot dataSnapshot) {
         if (view != null) {
+          view.showHideOverLay(false);
           view.letTheGameBegin();
         }
       }
