@@ -17,24 +17,26 @@
 package im.ene.mxmo.presentation.game.board;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import im.ene.mxmo.common.OnItemClickListener;
+import java.util.List;
 
 import static im.ene.mxmo.MemeApp.getApp;
 
 /**
  * Created by eneim on 3/4/17.
+ *
+ * @since 1.0.0
  */
 
-public class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
+class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
 
-  private final int BOARD_SIZE = 9;
   private int cursorPosition = RecyclerView.NO_POSITION;  // move over by meme action
 
-  final SparseArray<String> states;
+  final List<String> states;
+  final Boolean side; // TRUE for FALSE;
 
   OnItemClickListener itemClickListener;
 
@@ -43,7 +45,8 @@ public class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
     this.itemClickListener = itemClickListener;
   }
 
-  BoardAdapter(SparseArray<String> states) {
+  BoardAdapter(Boolean side, List<String> states) {
+    this.side = side;
     this.states = states;
   }
 
@@ -66,7 +69,7 @@ public class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
   }
 
   @Override public int getItemCount() {
-    return BOARD_SIZE;
+    return this.states.size();
   }
 
   /**
@@ -77,7 +80,7 @@ public class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
    */
   void check(int pos, String userName) {
     if (pos >= 0 && pos < getItemCount()) {
-      states.put(pos, userName);
+      states.set(pos, userName);
       setCursorPosition(pos);
     }
   }
@@ -95,7 +98,7 @@ public class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
     return cursorPosition;
   }
 
-  public SparseArray<String> getGameState() {
+  List<String> getGameState() {
     return states;
   }
 

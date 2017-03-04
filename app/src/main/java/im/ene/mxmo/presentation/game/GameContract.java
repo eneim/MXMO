@@ -17,7 +17,9 @@
 package im.ene.mxmo.presentation.game;
 
 import android.app.Activity;
-import android.util.SparseArray;
+import android.support.annotation.NonNull;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by eneim on 2/24/17.
@@ -34,6 +36,8 @@ class GameContract {
     void showWaitForSecondUserDialog();
 
     void letTheGameBegin();
+
+    void updateGameState(List<String> cells, boolean userInput);
   }
 
   interface Presenter {
@@ -44,7 +48,16 @@ class GameContract {
 
     void onUserName(String userName);
 
-    void updateGameState(SparseArray<String> state);
+    void updateGameStateAfterUserMode(List<String> state);
+
+    @NonNull Boolean getUserSide();
+
+    ArrayList<String> getGameState();
+
+    /**
+     * @return username of the winner, null if it is not done yet.
+     */
+    String judge();
   }
 
   interface MemeGameView extends GameView {

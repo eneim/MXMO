@@ -17,7 +17,6 @@
 package im.ene.mxmo.domain.model;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by eneim on 2/26/17.
@@ -47,9 +46,11 @@ public class TicTacToe {
 
   private boolean finished;
 
-  private List<String> cells = new ArrayList<>(9); // size of 9, state of cells
+  private Boolean currentTurn;  // TRUE: first user, FALSE: second user
 
-  private List<Message> messages = new ArrayList<>();
+  private ArrayList<String> cells = new ArrayList<>(9); // size of 9, state of cells
+
+  private ArrayList<Message> messages = new ArrayList<>();
 
   public String getFirstUser() {
     return firstUser;
@@ -83,7 +84,7 @@ public class TicTacToe {
     this.started = started;
   }
 
-  public List<String> getCells() {
+  public ArrayList<String> getCells() {
     return cells;
   }
 
@@ -95,12 +96,20 @@ public class TicTacToe {
     return createdAt;
   }
 
-  public List<Message> getMessages() {
+  public ArrayList<Message> getMessages() {
     return messages;
   }
 
-  @Deprecated public void setMessages(List<Message> messages) {
+  @Deprecated public void setMessages(ArrayList<Message> messages) {
     this.messages = messages;
+  }
+
+  public Boolean getCurrentTurn() {
+    return currentTurn;
+  }
+
+  public void setCurrentTurn(Boolean currentTurn) {
+    this.currentTurn = currentTurn;
   }
 
   public static final TicTacToe DEFAULT = new TicTacToe(-1);

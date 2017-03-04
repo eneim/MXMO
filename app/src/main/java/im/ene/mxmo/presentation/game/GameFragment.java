@@ -24,7 +24,6 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +35,7 @@ import im.ene.mxmo.common.BaseFragment;
 import im.ene.mxmo.common.TextWatcherAdapter;
 import im.ene.mxmo.presentation.game.board.GameBoardFragment;
 import im.ene.mxmo.presentation.game.chat.GameChatFragment;
+import java.util.List;
 
 import static im.ene.mxmo.MemeApp.getApp;
 
@@ -167,10 +167,11 @@ public abstract class GameFragment extends BaseFragment
     }
     Toast.makeText(getContext(), "Game Started", Toast.LENGTH_SHORT).show();
 
-    boardFragment = GameBoardFragment.newInstance();
+    boardFragment =
+        GameBoardFragment.newInstance(getPresenter().getUserSide(), getPresenter().getGameState());
     boardFragment.setTargetFragment(this, 100);
     chatFragment = GameChatFragment.newInstance();
-    chatFragment.setTargetFragment(this, 100);
+    chatFragment.setTargetFragment(this, 101);
 
     getChildFragmentManager().beginTransaction()
         .replace(R.id.game_board, boardFragment)
@@ -178,12 +179,20 @@ public abstract class GameFragment extends BaseFragment
         .commit();
   }
 
+  @Override public void updateGameState(List<String> cells, boolean userInput) {
+    boardFragment.syncBoard(cells, userInput);
+    String winner = getPresenter().judge();
+    if (winner != null) {
+      Toast.makeText(getContext(), "Winner: " + winner, Toast.LENGTH_SHORT).show();
+    }
+  }
+
   @NonNull protected abstract GameContract.Presenter getPresenter();
 
   // Other interfaces
 
-  @Override public void onBoardState(SparseArray<String> gameState) {
-    Log.d(TAG, "onBoardState() called with: gameState = [" + gameState + "]");
-    getPresenter().updateGameState(gameState);
+  @Override public void onUserMove(List<String> gameState) {
+    Log.d(TAG, "onUserMove() called with: gameState = [" + gameState + "]");
+    getPresenter().updateGameStateAfterUserMode(gameState);
   }
 }

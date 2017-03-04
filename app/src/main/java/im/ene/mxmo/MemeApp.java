@@ -47,6 +47,8 @@ import java.util.Map;
 
 public class MemeApp extends Application {
 
+  public static final String INVALID = "?";
+
   /* begin pref key */
   // either '0' for normal or '1' for 'meme'
   public static final String KEY_GAME_MODE = "mxmo_game_mode";

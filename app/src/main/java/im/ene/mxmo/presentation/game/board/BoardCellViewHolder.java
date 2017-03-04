@@ -40,9 +40,9 @@ public class BoardCellViewHolder extends RecyclerView.ViewHolder {
     ButterKnife.bind(this, itemView);
   }
 
-  void bind(BoardAdapter adapter, Object item) {
-    if (item != null) {
-      int res = item.toString().equals(MemeApp.getApp().getUserName()) ? //
+  void bind(BoardAdapter adapter, Object item /* username or MemeApp.INVALID */) {
+    if (item != MemeApp.INVALID) {
+      int res = adapter.side == (item.toString().equals(MemeApp.getApp().getUserName())) ? //
           R.drawable.ic_button_shape_oval : R.drawable.ic_button_close;
       button.setImageResource(res);
     } else {
