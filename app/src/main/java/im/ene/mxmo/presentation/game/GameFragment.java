@@ -34,7 +34,6 @@ import im.ene.mxmo.common.BaseFragment;
 import im.ene.mxmo.common.TextWatcherAdapter;
 import im.ene.mxmo.presentation.game.board.GameBoardFragment;
 import im.ene.mxmo.presentation.game.chat.GameChatFragment;
-import io.reactivex.disposables.CompositeDisposable;
 
 import static im.ene.mxmo.MemeApp.getApp;
 
@@ -64,8 +63,6 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
     return fragment;
   }
 
-  private CompositeDisposable disposables;
-
   protected @BindView(R.id.overlay) View overlayView;
   AlertDialog welcomeDialog;
   protected GameBoardFragment boardFragment;
@@ -87,8 +84,6 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
 
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    disposables = new CompositeDisposable();
-
     welcomeDialog = new AlertDialog.Builder(getContext()) //
         .setTitle("Welcome to new TicTacToe Game.")
         .setMessage("You are the first User, please wait for other User to join.")
@@ -107,8 +102,6 @@ public abstract class GameFragment extends BaseFragment implements GameContract.
 
   @Override public void onDestroyView() {
     super.onDestroyView();
-    disposables.dispose();
-    disposables = null;
     getPresenter().setView(null);
   }
 
