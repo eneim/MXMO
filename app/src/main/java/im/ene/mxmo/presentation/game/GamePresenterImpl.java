@@ -159,10 +159,12 @@ class GamePresenterImpl implements GameContract.Presenter {
   @SuppressWarnings("WeakerAccess") void waitForSecondPlayer() {
     this.gameRef.addValueEventListener(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot snapshot) {
-        if (snapshot.getValue() != null) {
+        if (snapshot.getValue() != null && snapshot.getValue() instanceof HashMap) {
           Object firstUser = ((HashMap) snapshot.getValue()).get("firstUser");
           Object secondUser = ((HashMap) snapshot.getValue()).get("secondUser");
           if (firstUser != null && secondUser != null) {  // both Users are in
+            game.setFirstUser(firstUser.toString());
+            game.setSecondUser(secondUser.toString());
             gameRef.removeEventListener(this);
             onGameAbleToStart();
           } else {
