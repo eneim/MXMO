@@ -31,7 +31,7 @@ import java.util.Date;
  * Created by eneim on 3/5/17.
  */
 
-public class MessageViewHolder extends RecyclerView.ViewHolder {
+class MessageViewHolder extends RecyclerView.ViewHolder {
 
   static final int LAYOUT_RES = R.layout.viewholder_message_item;
 

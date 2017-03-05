@@ -29,11 +29,11 @@ import java.util.Collection;
  * Created by eneim on 3/5/17.
  */
 
-public class MessagesAdapter extends RecyclerView.Adapter<MessageViewHolder> {
+class MessagesAdapter extends RecyclerView.Adapter<MessageViewHolder> {
 
   private final SortedList<Message> messages;
 
-  public MessagesAdapter() {
+  MessagesAdapter() {
     super();
     this.messages = new SortedList<>(Message.class, new SortedListAdapterCallback<Message>(this) {
       @Override public int compare(Message o1, Message o2) {
