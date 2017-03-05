@@ -33,6 +33,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     if (checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
         != PackageManager.PERMISSION_GRANTED) {
       requestPermissions(new String[] { android.Manifest.permission.ACCESS_COARSE_LOCATION }, 1);
+    } else {
+      onPermissionGranted(android.Manifest.permission.ACCESS_COARSE_LOCATION, true);
     }
   }
 
@@ -42,12 +44,18 @@ public abstract class BaseActivity extends AppCompatActivity {
       if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
         Log.d("PERMISSION", "Succeeded");
         Toast.makeText(BaseActivity.this, "Permission Request Succeed", Toast.LENGTH_SHORT).show();
+        onPermissionGranted(permissions[0], true);
       } else {
         Log.d("PERMISSION", "Failed");
         Toast.makeText(BaseActivity.this, "Permission Request Failed", Toast.LENGTH_SHORT).show();
+        onPermissionGranted(permissions[0], false);
       }
     } else {
       super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
+  }
+
+  protected void onPermissionGranted(String permission, boolean granted) {
+
   }
 }

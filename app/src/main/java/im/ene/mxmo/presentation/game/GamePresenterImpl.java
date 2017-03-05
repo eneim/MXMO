@@ -33,7 +33,6 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Function;
-import io.reactivex.schedulers.Schedulers;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,7 +52,7 @@ class GamePresenterImpl implements GameContract.Presenter {
   @SuppressWarnings("unused") private static final String TAG = "MXMO:GamePresenter";
 
   @SuppressWarnings("WeakerAccess") GameContract.GameView view;
-  @SuppressWarnings("WeakerAccess") CompositeDisposable disposables;
+  @SuppressWarnings("WeakerAccess") protected CompositeDisposable disposables;
 
   protected TicTacToe game;
   @SuppressWarnings("WeakerAccess") @NonNull final DatabaseReference gameDb;
@@ -61,17 +60,20 @@ class GamePresenterImpl implements GameContract.Presenter {
 
   GamePresenterImpl(@NonNull DatabaseReference gameDb) {
     this.gameDb = gameDb;
-    this.disposables = new CompositeDisposable();
   }
 
   @Override public void setView(GameContract.GameView view) {
     this.view = view;
     if (view == null) {
-      gameRef.removeEventListener(valueEventListener);
+      if (gameRef != null) {
+        gameRef.removeEventListener(valueEventListener);
+      }
       setGame(null, null);
       valueEventListener = null;
       disposables.dispose();
+      disposables = null;
     } else {
+      disposables = new CompositeDisposable();
       disposables.add(RxBus.getBus().observe(GameChangedEvent.class)  //
           .observeOn(AndroidSchedulers.mainThread()).subscribe(event -> {
             if (event.game == TicTacToe.DEFAULT) {  // default unknown game
@@ -124,8 +126,6 @@ class GamePresenterImpl implements GameContract.Presenter {
             .filter(pair -> pair.first != null)
             .map(game -> new GameChangedEvent(userName, gameDb.child(game.first), game.second))
             .defaultIfEmpty(new GameChangedEvent(userName, null, TicTacToe.DEFAULT))
-            .subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
             .subscribe(event -> RxBus.getBus().send(event));
       }
     });
@@ -227,7 +227,7 @@ class GamePresenterImpl implements GameContract.Presenter {
         }
       };
 
-  @SuppressWarnings("WeakerAccess") void onGameAbleToStart() {
+  @SuppressWarnings("WeakerAccess") protected void onGameAbleToStart() {
     this.gameRef.addListenerForSingleValueEvent(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot dataSnapshot) {
         if (view != null) {

@@ -21,11 +21,13 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.support.annotation.Nullable;
+import android.support.multidex.MultiDex;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.jins_jp.meme.MemeLib;
 import im.ene.mxmo.domain.model.TicTacToe;
+import im.ene.mxmo.library.GyroData;
 import im.ene.mxmo.presentation.game.GameMode;
 import java.lang.reflect.Type;
 import java.util.Map;
@@ -128,5 +130,23 @@ public class MemeApp extends Application {
   @Override public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
     prettyTime = new PrettyTime();
+  }
+
+  @Override protected void attachBaseContext(Context base) {
+    super.attachBaseContext(base);
+    MultiDex.install(this);
+  }
+
+  // support meme
+
+  private static final String KEY_GYRO_DATA = "MXMO_GYRO_DATA";
+
+  public GyroData getCalibratedGyroDta() {
+    String data = preferences().getString(KEY_GYRO_DATA, null);
+    return data == null ? null : getGson().fromJson(data, GyroData.class);
+  }
+
+  public void saveCalibratedGyroData(GyroData data) {
+    preferences().edit().putString(KEY_GYRO_DATA, getGson().toJson(data)).apply();
   }
 }

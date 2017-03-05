@@ -79,6 +79,8 @@ class GameContract {
     void onMemeScanned(String id);
 
     void onMemeConnected(boolean connected);
+
+    void showCalibrateDialog(boolean willShow);
   }
 
   interface MemeGamePresenter extends Presenter {
