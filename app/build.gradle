@@ -89,6 +89,8 @@ dependencies {
 
   compile 'com.google.firebase:firebase-database:10.2.0'
 
+  compile 'org.ocpsoft.prettytime:prettytime:4.0.1.Final'
+
   // Latest one on maven central
   retrolambdaConfig 'net.orfjackal.retrolambda:retrolambda:2.5.0'
 

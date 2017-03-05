@@ -28,12 +28,14 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import butterknife.BindView;
 import butterknife.OnClick;
 import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.R;
 import im.ene.mxmo.common.BaseFragment;
 import im.ene.mxmo.domain.model.Message;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Created by eneim on 2/26/17.
@@ -54,6 +56,10 @@ public class GameChatFragment extends BaseFragment {
   }
 
   ArrayList<Integer> emojis;
+  AlertDialog emojiDialog;
+  Message chatMessage;  // content change on every emoji select
+
+  EmojiAdapter.EmojiClickHandler emojiClickHandler;
   Callback callback;
 
   @Override public void onAttach(Context context) {
@@ -73,11 +79,6 @@ public class GameChatFragment extends BaseFragment {
 
     chatMessage = new Message(MemeApp.getApp().getUserName());
   }
-
-  AlertDialog emojiDialog;
-  EmojiAdapter.EmojiClickHandler emojiClickHandler;
-
-  Message chatMessage;  // content change on every emoji select
 
   @SuppressWarnings("unused") @OnClick(R.id.select_emoji) void openEmojiDialog() {
     if (emojiDialog == null) {
@@ -115,11 +116,15 @@ public class GameChatFragment extends BaseFragment {
     }
   }
 
+  @BindView(R.id.recycler_view) RecyclerView messageList;
+
   @Nullable @Override
   public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
       @Nullable Bundle savedInstanceState) {
     return inflater.inflate(R.layout.layout_game_chat, container, false);
   }
+
+  MessagesAdapter messagesAdapter;
 
   @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
@@ -128,6 +133,17 @@ public class GameChatFragment extends BaseFragment {
         chatMessage.setMessage(emojiText);
       }
     };
+
+    messagesAdapter = new MessagesAdapter();
+    LinearLayoutManager layoutManager =
+        new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, true);
+    messageList.setLayoutManager(layoutManager);
+    messageList.setAdapter(messagesAdapter);
+  }
+
+  public void updateMessages(Collection<Message> messages) {
+    messagesAdapter.addMessages(messages);
+    messageList.postDelayed(() -> messageList.smoothScrollToPosition(0), 200);
   }
 
   @Override public void onDestroyView() {

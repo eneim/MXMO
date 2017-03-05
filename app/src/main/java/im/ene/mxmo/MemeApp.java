@@ -19,6 +19,7 @@ package im.ene.mxmo;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.support.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -28,6 +29,7 @@ import im.ene.mxmo.domain.model.TicTacToe;
 import im.ene.mxmo.presentation.game.GameMode;
 import java.lang.reflect.Type;
 import java.util.Map;
+import org.ocpsoft.prettytime.PrettyTime;
 
 /**
  * Created by eneim on 2/13/17.
@@ -64,9 +66,12 @@ public class MemeApp extends Application {
 
   private static MemeApp app;
 
+  private PrettyTime prettyTime;
+
   @Override public void onCreate() {
     super.onCreate();
     app = this;
+    prettyTime = new PrettyTime();
 
     preferences().edit().putInt(KEY_GAME_MODE, GameMode.MODE_NORMAL).apply();
     // FirebaseDatabase.getInstance().setLogLevel(Logger.Level.DEBUG);
@@ -114,5 +119,14 @@ public class MemeApp extends Application {
 
   public void setUserName(String userName) {
     preferences().edit().putString(KEY_USER_NAME, userName).apply();
+  }
+
+  public PrettyTime getPrettyTime() {
+    return prettyTime;
+  }
+
+  @Override public void onConfigurationChanged(Configuration newConfig) {
+    super.onConfigurationChanged(newConfig);
+    prettyTime = new PrettyTime();
   }
 }

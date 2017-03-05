@@ -49,8 +49,7 @@ import static im.ene.mxmo.MemeApp.getApp;
  * @since 1.0.0
  */
 public abstract class GameFragment extends BaseFragment
-    implements GameContract.GameView, GameBoardFragment.Callback,
-    GameChatFragment.Callback {
+    implements GameContract.GameView, GameBoardFragment.Callback, GameChatFragment.Callback {
 
   @SuppressWarnings("unused") private static final String TAG = "MXMO:GameFragment";
 
@@ -214,7 +213,7 @@ public abstract class GameFragment extends BaseFragment
   }
 
   @Override public void updateMessages(Collection<Message> messages) {
-    // TODO
+    chatFragment.updateMessages(messages);
   }
 
   @NonNull protected abstract GameContract.Presenter getPresenter();
