@@ -84,7 +84,7 @@ public class GameChatFragment extends BaseFragment {
       emojiDialog.setOnDismissListener(dialog -> snapHelper.attachToRecyclerView(null));
       emojiDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK",
           (dialog, which) -> dialog.dismiss());
-      emojiDialog.setCancelable(false);
+      // emojiDialog.setCancelable(false);
     }
 
     if (!emojiDialog.isShowing()) {

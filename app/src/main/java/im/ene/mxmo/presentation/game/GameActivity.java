@@ -20,8 +20,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import im.ene.mxmo.common.BaseActivity;
-import im.ene.mxmo.presentation.game.chat.GameChatFragment;
-import java.util.ArrayList;
+
+import static im.ene.mxmo.MemeApp.getApp;
 
 /**
  * Created by eneim on 2/24/17.
@@ -36,40 +36,30 @@ public class GameActivity extends BaseActivity {
 
   @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    //int userMode = getApp().getGameMode();
-    //userModeChooserDialog = new AlertDialog.Builder(this)
-    //    .setTitle("Select user mode:")
-    //    .setSingleChoiceItems(
-    //    new CharSequence[] { "Normal User", "Meme User" }, userMode,
-    //    (dialog, which) -> getApp().setGameMode(which))
-    //    .setNeutralButton(android.R.string.ok, (dialog, which) -> //
-    //        getSupportFragmentManager().beginTransaction()
-    //            .replace(android.R.id.content, GameFragment.newInstance(getApp().getGameMode()))
-    //            .commit())
-    //    .setCancelable(false)
-    //    .create();
-    //
-    //welcomeDialog = new AlertDialog.Builder(this).setTitle("Welcome to MxMo!")
-    //    .setMessage("Please choose your mode (Meme User will require a Jins Meme to play)")
-    //    .setNeutralButton(android.R.string.ok, (dialog, which) -> dialog.dismiss())
-    //    .setOnDismissListener(dialog -> {
-    //      if (!userModeChooserDialog.isShowing()) {
-    //        userModeChooserDialog.show();
-    //      }
-    //    })
-    //    .setCancelable(false)
-    //    .create();
-    //
-    //welcomeDialog.show();
+    int userMode = getApp().getGameMode();
+    userModeChooserDialog = new AlertDialog.Builder(this)
+        .setTitle("Select user mode:")
+        .setSingleChoiceItems(
+        new CharSequence[] { "Normal User", "Meme User" }, userMode,
+        (dialog, which) -> getApp().setGameMode(which))
+        .setNeutralButton(android.R.string.ok, (dialog, which) -> //
+            getSupportFragmentManager().beginTransaction()
+                .replace(android.R.id.content, GameFragment.newInstance(getApp().getGameMode()))
+                .commit())
+        .setCancelable(false)
+        .create();
 
-    ArrayList<Integer> emojis = new ArrayList<>();
-    emojis.add(0x1F600);
-    emojis.add(0x1F602);
-    emojis.add(0x1F605);
+    welcomeDialog = new AlertDialog.Builder(this).setTitle("Welcome to MxMo!")
+        .setMessage("Please choose your mode (Meme User will require a Jins Meme to play)")
+        .setNeutralButton(android.R.string.ok, (dialog, which) -> dialog.dismiss())
+        .setOnDismissListener(dialog -> {
+          if (!userModeChooserDialog.isShowing()) {
+            userModeChooserDialog.show();
+          }
+        })
+        .setCancelable(false)
+        .create();
 
-    GameChatFragment chatFragment = GameChatFragment.newInstance(emojis);
-    getSupportFragmentManager().beginTransaction()
-        .replace(android.R.id.content, chatFragment)
-        .commit();
+    welcomeDialog.show();
   }
 }

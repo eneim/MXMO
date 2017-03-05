@@ -31,6 +31,7 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiViewHolder> {
 
   private final List<Integer> emojis;
 
+  private RecyclerView recyclerView;
   private int cursorPosition = RecyclerView.NO_POSITION;
 
   EmojiAdapter(List<Integer> emojis) {
@@ -43,13 +44,23 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiViewHolder> {
     this.clickHandler = clickHandler;
   }
 
+  @Override public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+    super.onAttachedToRecyclerView(recyclerView);
+    this.recyclerView = recyclerView;
+  }
+
+  @Override public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+    super.onDetachedFromRecyclerView(recyclerView);
+    this.recyclerView = null;
+  }
+
   @Override public EmojiViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
     View view =
         LayoutInflater.from(parent.getContext()).inflate(EmojiViewHolder.LAYOUT_RES, parent, false);
     EmojiViewHolder holder = new EmojiViewHolder(view);
     holder.itemView.setOnClickListener(v -> {
       if (clickHandler != null) {
-        setCursorPosition(holder.getAdapterPosition());
+        setCursorPosition(holder.getAdapterPosition(), v);
         clickHandler.onItemClick(EmojiAdapter.this, holder, v, holder.getAdapterPosition(),
             getItemId(holder.getAdapterPosition()));
       }
@@ -66,13 +77,17 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiViewHolder> {
     return Integer.MAX_VALUE;
   }
 
-  void setCursorPosition(int cursorPosition) {
+  void setCursorPosition(int cursorPosition, View view) {
     if (this.cursorPosition != cursorPosition) {
-      int oldPos = this.cursorPosition;
       this.cursorPosition = cursorPosition;
-      // notifyItemChanged(oldPos);
-      // notifyItemChanged(this.cursorPosition);
       notifyDataSetChanged();
+      if (this.recyclerView != null) {
+        this.recyclerView.post(() -> {
+          int xDiff = (int) ((view.getRight() + view.getLeft()) / 2.0
+              - (recyclerView.getRight() + recyclerView.getLeft()) / 2.0);
+          recyclerView.smoothScrollBy(xDiff, 0);
+        });
+      }
     }
   }
 
