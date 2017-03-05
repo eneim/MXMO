@@ -15,20 +15,10 @@
   ~ limitations under the License.
   -->
 
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-
-  <item android:state_checked="false">
-    <shape android:shape="rectangle"
-        android:tint="@android:color/transparent"
-        android:tintMode="src_in">
-    </shape>
-  </item>
-
-  <item android:state_checked="true">
-    <shape android:shape="rectangle"
-        android:tint="#ffff00"
-        android:tintMode="src_in">
-      <stroke android:color="#1e90ff" android:width="4dp"/>
-    </shape>
-  </item>
-</selector>
+<android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/emoji_list"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:background="#E5E5E5"
+    android:padding="8dp"
+    />

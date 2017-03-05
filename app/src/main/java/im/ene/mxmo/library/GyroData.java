@@ -16,11 +16,14 @@
 
 package im.ene.mxmo.library;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by eneim on 2/5/17.
  */
 
-public class GyroData {
+public class GyroData implements Parcelable {
 
   private final float pitch;
   private final float roll;
@@ -43,4 +46,30 @@ public class GyroData {
   public float getYaw() {
     return yaw;
   }
+
+  @Override public int describeContents() {
+    return 0;
+  }
+
+  @Override public void writeToParcel(Parcel dest, int flags) {
+    dest.writeFloat(this.pitch);
+    dest.writeFloat(this.roll);
+    dest.writeFloat(this.yaw);
+  }
+
+  protected GyroData(Parcel in) {
+    this.pitch = in.readFloat();
+    this.roll = in.readFloat();
+    this.yaw = in.readFloat();
+  }
+
+  public static final Creator<GyroData> CREATOR = new Creator<GyroData>() {
+    @Override public GyroData createFromParcel(Parcel source) {
+      return new GyroData(source);
+    }
+
+    @Override public GyroData[] newArray(int size) {
+      return new GyroData[size];
+    }
+  };
 }

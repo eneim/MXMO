@@ -27,14 +27,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckedTextView;
 import android.widget.EditText;
 import android.widget.Toast;
 import butterknife.BindView;
 import im.ene.mxmo.R;
 import im.ene.mxmo.common.BaseFragment;
 import im.ene.mxmo.common.TextWatcherAdapter;
+import im.ene.mxmo.domain.model.Message;
 import im.ene.mxmo.presentation.game.board.GameBoardFragment;
 import im.ene.mxmo.presentation.game.chat.GameChatFragment;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static im.ene.mxmo.MemeApp.getApp;
@@ -45,7 +49,7 @@ import static im.ene.mxmo.MemeApp.getApp;
  * @since 1.0.0
  */
 public abstract class GameFragment extends BaseFragment
-    implements GameContract.GameView, GameBoardFragment.BoardStateChangeListener {
+    implements GameContract.GameView, GameBoardFragment.Callback, GameChatFragment.Callback {
 
   @SuppressWarnings("unused") private static final String TAG = "MXMO:GameFragment";
 
@@ -67,6 +71,9 @@ public abstract class GameFragment extends BaseFragment
   }
 
   protected @BindView(R.id.overlay) View overlayView;
+  @BindView(R.id.turn_first_user) CheckedTextView firstUserName;
+  @BindView(R.id.turn_second_user) CheckedTextView secondUserName;
+
   AlertDialog welcomeDialog;
   protected GameBoardFragment boardFragment;
   protected GameChatFragment chatFragment;
@@ -101,6 +108,17 @@ public abstract class GameFragment extends BaseFragment
   }
 
   // GameView interface
+
+  @Override public void showUsersName(String firstUser, String secondUser) {
+    firstUserName.setText(firstUser);
+    secondUserName.setText(secondUser);
+  }
+
+  @Override public void updateCurrentTurn(Boolean turn) {
+    boolean firstUserChecked = Boolean.TRUE.equals(turn);
+    firstUserName.setChecked(firstUserChecked);
+    secondUserName.setChecked(!firstUserChecked);
+  }
 
   @Override public void showHideOverLay(boolean willShow) {
     int overlayViewVisibility = willShow ? View.VISIBLE : View.GONE;
@@ -170,7 +188,14 @@ public abstract class GameFragment extends BaseFragment
     boardFragment =
         GameBoardFragment.newInstance(getPresenter().getUserSide(), getPresenter().getGameState());
     boardFragment.setTargetFragment(this, 100);
-    chatFragment = GameChatFragment.newInstance();
+
+    // TODO Sync with Firebase
+    ArrayList<Integer> emojis = new ArrayList<>();
+    emojis.add(0x1F600);
+    emojis.add(0x1F602);
+    emojis.add(0x1F605);
+
+    chatFragment = GameChatFragment.newInstance(emojis);
     chatFragment.setTargetFragment(this, 101);
 
     getChildFragmentManager().beginTransaction()
@@ -187,6 +212,10 @@ public abstract class GameFragment extends BaseFragment
     }
   }
 
+  @Override public void updateMessages(Collection<Message> messages) {
+    chatFragment.updateMessages(messages);
+  }
+
   @NonNull protected abstract GameContract.Presenter getPresenter();
 
   // Other interfaces
@@ -198,5 +227,9 @@ public abstract class GameFragment extends BaseFragment
 
   @Override public boolean isMyTurnNow() {
     return getPresenter().getUserSide() == getPresenter().getCurrentTurn();
+  }
+
+  @Override public void onEmojiMessage(Message message) {
+    getPresenter().sendChatMessage(message);
   }
 }

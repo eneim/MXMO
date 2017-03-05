@@ -80,14 +80,15 @@ class MemeRealTimeDataFilter {
         case HEAD:
           float pitchDiff = Math.abs(data.getPitch() - calibGyroData.getPitch());
           float rollDiff = Math.abs(data.getRoll() - calibGyroData.getRoll());
-          float yawDiff = Math.abs(data.getYaw() - calibGyroData.getYaw());
+          float rawYawDiff = getRawYawDiff(data.getYaw());
+          float yawDiff = Math.abs(rawYawDiff);
           Log.i("GYRO:DIFF", "update: " + (yawDiff + rollDiff + pitchDiff));
           if (yawDiff + rollDiff + pitchDiff > 10 /* magic number, TODO: calibrate this */) {
             float maxDiff = Math.max(yawDiff, Math.max(pitchDiff, rollDiff));
             if (yawDiff == maxDiff) {
-              if (data.getYaw() < calibGyroData.getYaw() * lowerFactor) {
+              if (rawYawDiff < -25) {
                 return setCommand(Command.of(cmdSource, Action.YAW_LEFT));
-              } else if (data.getYaw() > calibGyroData.getYaw() * higherFactor) {
+              } else if (rawYawDiff > 25) {
                 return setCommand(Command.of(cmdSource, Action.YAW_RIGHT));
               } else {
                 return setCommand(Command.of(cmdSource, Action.IDLE));
@@ -127,5 +128,19 @@ class MemeRealTimeDataFilter {
     lastCmd = command;
     lastCmdTimeStamp = System.nanoTime() / 1_000_000;
     return lastCmd;
+  }
+
+  // just yaw
+  private float getRawYawDiff(float yaw) {
+    float stable = calibGyroData.getYaw();
+    if (stable > 180) {
+      stable = stable - 360;
+    }
+
+    if (yaw > 180) {
+      yaw = yaw - 360;
+    }
+
+    return yaw - stable;
   }
 }

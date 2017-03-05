@@ -62,7 +62,11 @@ public class MemeActionFilter {
 
   public void removeOnHeadActionListener(OnHeadActionListener listener) {
     if (this.headActions != null) {
-      this.headActions.remove(listener);
+      if (listener != null) {
+        this.headActions.remove(listener);
+      } else {
+        this.headActions.clear();
+      }
     }
   }
 
@@ -75,7 +79,11 @@ public class MemeActionFilter {
 
   public void removeOnEyeActionListener(OnEyeActionListener listener) {
     if (this.eyeActions != null) {
-      this.eyeActions.remove(listener);
+      if (listener != null) {
+        this.eyeActions.remove(listener);
+      } else {
+        this.eyeActions.clear();
+      }
     }
   }
 

@@ -41,7 +41,7 @@ public class BoardCellViewHolder extends RecyclerView.ViewHolder {
   }
 
   void bind(BoardAdapter adapter, Object item /* username or MemeApp.INVALID */) {
-    if (item != MemeApp.INVALID) {
+    if (!MemeApp.INVALID.equals(item)) {
       int res = adapter.side == (item.toString().equals(MemeApp.getApp().getUserName())) ? //
           R.drawable.ic_button_shape_oval : R.drawable.ic_button_close;
       button.setImageResource(res);

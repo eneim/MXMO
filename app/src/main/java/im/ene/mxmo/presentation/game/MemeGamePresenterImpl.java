@@ -18,23 +18,32 @@ package im.ene.mxmo.presentation.game;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.os.SystemClock;
+import android.util.Log;
 import com.google.firebase.database.DatabaseReference;
 import com.jins_jp.meme.MemeConnectListener;
 import com.jins_jp.meme.MemeLib;
-import com.jins_jp.meme.MemeRealtimeData;
-import com.jins_jp.meme.MemeRealtimeListener;
 import com.jins_jp.meme.MemeResponse;
 import com.jins_jp.meme.MemeResponseListener;
 import com.jins_jp.meme.MemeScanListener;
+import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.common.RxBus;
 import im.ene.mxmo.common.event.BluetoothConnectionEvent;
+import im.ene.mxmo.domain.model.GyroCalibrator;
+import im.ene.mxmo.library.Action;
+import im.ene.mxmo.library.Command;
+import im.ene.mxmo.library.GyroData;
+import im.ene.mxmo.library.MemeActionFilter;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
 
 /**
  * Created by eneim on 2/24/17.
  */
 class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.MemeGamePresenter {
+
+  private static final String TAG = "MXMO:MemeGamePresenter";
 
   GameContract.MemeGameView view;
   MemeLib memeLib;
@@ -44,9 +53,8 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
     super(gameDb);
   }
 
-  private CompositeDisposable disposables = new CompositeDisposable();
-
   @Override public void setView(GameContract.GameView view) {
+    super.setView(view);
     this.view = (GameContract.MemeGameView) view;
     if (view != null) {
       memeLib = MemeLib.getInstance();
@@ -59,7 +67,6 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
           .subscribe(event -> this.view.onBluetoothState(Math.max(event.state, event.prevState))));
     } else {
       memeLib = null;
-      disposables.dispose();
     }
   }
 
@@ -101,8 +108,127 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
   }
 
   @Override public void initGame() {
-    if (memeId != null && view != null) {
-      view.showUserNameInputDialog("meme_user_" + memeId);
+    if (view == null) {
+      throw new NullPointerException("View is null!!");
+    }
+
+    // start listen to meme data to calibrated
+    GyroData gyroData = MemeApp.getApp().getCalibratedGyroDta();
+    if (gyroData == null) {
+      view.showCalibrateDialog(true);
+      final GyroCalibrator calibrator = new GyroCalibrator();
+      memeLib.startDataReport(data -> {
+        if (calibrator.getStartTime() == null) {
+          calibrator.setStartTime(SystemClock.elapsedRealtime());
+        }
+
+        if (calibrator.getStartTime() + 10 * 1000 > SystemClock.elapsedRealtime()) {
+          synchronized (calibrator) {
+            calibrator.add(new GyroData(data.getPitch(), data.getRoll(), data.getYaw()));
+          }
+
+          return;
+        }
+
+        MemeApp.getApp().saveCalibratedGyroData(calibrator.getCalibrated());
+        memeLib.stopDataReport();
+        initMemeGame();
+      });
+    } else {
+      initMemeGame();
+    }
+  }
+
+  @SuppressWarnings("WeakerAccess") void initMemeGame() {
+    Single.just(view != null && memeId != null)
+        .filter(Boolean.TRUE::equals)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(aBoolean -> {
+          view.showCalibrateDialog(false);
+          view.showHideOverLay(true);
+          view.showUserNameInputDialog("meme_user_" + memeId);
+        });
+  }
+
+  @Override protected void onGameAbleToStart() {
+    MemeActionFilter actionFilter = new MemeActionFilter(MemeApp.getApp().getCalibratedGyroDta());
+    actionFilter.addOnEyeActionListener(action -> Flowable.just(action)
+        .filter(command -> command.getAction() != Action.IDLE)
+        .subscribe(action1 -> {
+          if (view != null) {
+            if (view.getCurrentMode() == GameContract.MemeGameView.MODE_CHAT) {
+              handleActionInChatMode(action1);
+            } else if (view.getCurrentMode() == GameContract.MemeGameView.MODE_GAME) {
+              handleActionInGameMode(action1);
+            }
+          }
+        }));
+
+    actionFilter.addOnHeadActionListener(action -> Flowable.just(action)
+        .filter(command -> command.getAction() != Action.IDLE && view != null)
+        .subscribe(action1 -> {
+          Log.i(TAG, "onHeadAction() called with: action = [" + action1 + "]");
+          switch (action1.getAction()) {
+            case YAW_LEFT:
+              if (view.getCurrentMode() != GameContract.MemeGameView.MODE_GAME) {
+                view.setCurrentMode(GameContract.MemeGameView.MODE_GAME);
+              } else {
+                handleActionInGameMode(action1);
+              }
+              break;
+            case YAW_RIGHT:
+              if (view.getCurrentMode() != GameContract.MemeGameView.MODE_CHAT) {
+                view.setCurrentMode(GameContract.MemeGameView.MODE_CHAT);
+              } else {
+                handleActionInChatMode(action1);
+              }
+              break;
+            default:
+              if (view.getCurrentMode() == GameContract.MemeGameView.MODE_CHAT) {
+                handleActionInChatMode(action1);
+              } else if (view.getCurrentMode() == GameContract.MemeGameView.MODE_GAME) {
+                handleActionInGameMode(action1);
+              }
+              break;
+          }
+        }));
+
+    memeLib.startDataReport(data -> Flowable.just(data)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(actionFilter::onNewData));
+
+    super.onGameAbleToStart();
+  }
+
+  private void handleActionInGameMode(Command action) {
+    switch (action.getAction()) {
+      case EYE_TURN_RIGHT:
+        // move cursor + 1;
+        view.moveCursorPosition();
+        break;
+      case YAW_LEFT:
+        view.checkCursor();
+        break;
+      // do nothing
+      case EYE_TURN_LEFT:
+      default:
+        break;
+    }
+  }
+
+  private void handleActionInChatMode(Command action) {
+    // RIGHT: open dialog, select emoji, also check the command right before this, if LEFT --> do nothing (案)
+    // LEFT: go to OK button or Cancel, but not enter, count down to OK or Cancel. (also check command before this?)
+    switch (action.getAction()) {
+      case EYE_TURN_RIGHT:
+        view.prepareEmojiSelectDialog();
+        view.nextEmoji(); // select one;
+        break;
+      case YAW_RIGHT:
+        view.selectEmojiAndSend(true);
+        break;
+      default:
+        break;
     }
   }
 
@@ -127,7 +253,6 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
     @Override public void memeConnectCallback(boolean connected) {
       if (view != null) {
         view.onMemeConnected(connected);
-        memeLib.startDataReport(new MemeRealTimeListenerImpl());
       }
     }
 
@@ -143,16 +268,6 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
 
     @Override public void memeResponseCallback(MemeResponse memeResponse) {
       // Do nothing
-    }
-  }
-
-  private class MemeRealTimeListenerImpl implements MemeRealtimeListener {
-
-    MemeRealTimeListenerImpl() {
-    }
-
-    @Override public void memeRealtimeCallback(MemeRealtimeData memeRealtimeData) {
-
     }
   }
 }

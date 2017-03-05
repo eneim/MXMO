@@ -18,7 +18,9 @@ package im.ene.mxmo.presentation.game;
 
 import android.app.Activity;
 import android.support.annotation.NonNull;
+import im.ene.mxmo.domain.model.Message;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -38,6 +40,12 @@ class GameContract {
     void letTheGameBegin();
 
     void updateGameState(List<String> cells, boolean userInput);
+
+    void updateMessages(Collection<Message> messages);
+
+    void showUsersName(String firstUser, String secondUser);
+
+    void updateCurrentTurn(Boolean turn); // TRUE: first user, FALSE: second user
   }
 
   interface Presenter {
@@ -56,6 +64,8 @@ class GameContract {
 
     ArrayList<String> getGameState();
 
+    void sendChatMessage(Message message);
+
     /**
      * @return username of the winner, null if it is not done yet.
      */
@@ -64,11 +74,31 @@ class GameContract {
 
   interface MemeGameView extends GameView {
 
+    int MODE_GAME = 0;
+
+    int MODE_CHAT =1;
+
     void onBluetoothState(int state);
 
     void onMemeScanned(String id);
 
     void onMemeConnected(boolean connected);
+
+    void showCalibrateDialog(boolean willShow);
+
+    int getCurrentMode();
+
+    void setCurrentMode(int mode);  // 0: game mode, 1: chat mode
+
+    void moveCursorPosition();
+
+    void checkCursor();
+
+    void prepareEmojiSelectDialog();
+
+    void nextEmoji();
+
+    void selectEmojiAndSend(boolean select);
   }
 
   interface MemeGamePresenter extends Presenter {

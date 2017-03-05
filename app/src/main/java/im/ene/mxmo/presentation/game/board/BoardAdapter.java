@@ -139,6 +139,19 @@ class BoardAdapter extends RecyclerView.Adapter<BoardCellViewHolder> {
     return cursorPosition;
   }
 
+  int getNextCursorPosition() {
+    int nextPos = (cursorPosition + 1) % states.size();
+    int firstNextPost = nextPos;
+    while (!states.get(nextPos).equals(MemeApp.INVALID)) {
+      nextPos = (nextPos + 1) % states.size();
+      if (nextPos == firstNextPost) {
+        break;  // prevent loop
+      }
+    }
+
+    return nextPos;
+  }
+
   List<String> getGameState() {
     return states;
   }

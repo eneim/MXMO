@@ -5,18 +5,18 @@
     android:viewportWidth="16.0"
     android:width="24dp">
   <path
-      android:fillColor="#00000000"
+      android:fillColor="#153859"
       android:pathData="m2,14 l12,-12"
       android:strokeAlpha="1"
-      android:strokeColor="@color/blue"
+      android:strokeColor="#153859"
       android:strokeLineCap="butt"
       android:strokeLineJoin="miter"
       android:strokeWidth="2"/>
   <path
-      android:fillColor="#00000000"
+      android:fillColor="#153859"
       android:pathData="m2,2 l12,12"
       android:strokeAlpha="1"
-      android:strokeColor="@color/blue"
+      android:strokeColor="#153859"
       android:strokeLineCap="butt"
       android:strokeLineJoin="miter"
       android:strokeWidth="2"/>

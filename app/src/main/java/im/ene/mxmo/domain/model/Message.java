@@ -24,10 +24,13 @@ public class Message {
 
   private final String userName;
 
+  private final Long createdAt;
+
   private String message; // current: only Emoji
 
   public Message(String userName) {
     this.userName = userName;
+    this.createdAt = System.currentTimeMillis();
   }
 
   public void setMessage(String message) {
@@ -40,5 +43,27 @@ public class Message {
 
   public String getMessage() {
     return message;
+  }
+
+  public Long getCreatedAt() {
+    return createdAt;
+  }
+
+  @Override public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Message)) return false;
+
+    Message message1 = (Message) o;
+
+    if (!userName.equals(message1.userName)) return false;
+    if (!createdAt.equals(message1.createdAt)) return false;
+    return message.equals(message1.message);
+  }
+
+  @Override public int hashCode() {
+    int result = userName.hashCode();
+    result = 31 * result + createdAt.hashCode();
+    result = 31 * result + message.hashCode();
+    return result;
   }
 }

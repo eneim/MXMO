@@ -36,12 +36,20 @@ public class GameActivity extends BaseActivity {
 
   @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    maybeRequestLocationPermission();
+  }
+
+  @Override protected void onPermissionGranted(String permission, boolean granted) {
+    super.onPermissionGranted(permission, true);
+    if (!granted) {
+      finish();
+      return;
+    }
+
     int userMode = getApp().getGameMode();
-    userModeChooserDialog = new AlertDialog.Builder(this)
-        .setTitle("Select user mode:")
-        .setSingleChoiceItems(
-        new CharSequence[] { "Normal User", "Meme User" }, userMode,
-        (dialog, which) -> getApp().setGameMode(which))
+    userModeChooserDialog = new AlertDialog.Builder(this).setTitle("Select user mode:")
+        .setSingleChoiceItems(new CharSequence[] { "Normal User", "Meme User" }, userMode,
+            (dialog, which) -> getApp().setGameMode(which))
         .setNeutralButton(android.R.string.ok, (dialog, which) -> //
             getSupportFragmentManager().beginTransaction()
                 .replace(android.R.id.content, GameFragment.newInstance(getApp().getGameMode()))

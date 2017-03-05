@@ -16,19 +16,182 @@
 
 package im.ene.mxmo.presentation.game.chat;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.LinearSnapHelper;
+import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import butterknife.BindView;
+import butterknife.OnClick;
+import im.ene.mxmo.MemeApp;
+import im.ene.mxmo.R;
 import im.ene.mxmo.common.BaseFragment;
+import im.ene.mxmo.domain.model.Message;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Created by eneim on 2/26/17.
+ *
+ * @since 1.0.0
  */
 
 public class GameChatFragment extends BaseFragment {
 
-  public static GameChatFragment newInstance() {
-    Bundle args = new Bundle();
+  private static final String ARG_CHAT_EMOJIS = "MXMO_CHAT_EMOJIS";
+
+  public static GameChatFragment newInstance(ArrayList<Integer> emojis) {
     GameChatFragment fragment = new GameChatFragment();
+    Bundle args = new Bundle();
+    args.putIntegerArrayList(ARG_CHAT_EMOJIS, emojis);
     fragment.setArguments(args);
     return fragment;
+  }
+
+  ArrayList<Integer> emojis;
+  AlertDialog emojiDialog;
+  Message chatMessage;  // content change on every emoji select
+
+  EmojiAdapter.EmojiClickHandler emojiClickHandler;
+  Callback callback;
+
+  @Override public void onAttach(Context context) {
+    super.onAttach(context);
+    if (getTargetFragment() instanceof Callback) {
+      this.callback = (Callback) getTargetFragment();
+    }
+  }
+
+  @Override public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    if (getArguments() != null) {
+      emojis = new ArrayList<>();
+      //noinspection ConstantConditions
+      emojis.addAll(getArguments().getIntegerArrayList(ARG_CHAT_EMOJIS));
+    }
+
+    chatMessage = new Message(MemeApp.getApp().getUserName());
+  }
+
+  RecyclerView emojiList;
+  EmojiAdapter emojiAdapter;
+
+  @SuppressLint("InflateParams") @SuppressWarnings("unused")  //
+  @OnClick(R.id.select_emoji) public void showEmojiDialog() {
+    if (emojiDialog == null) {
+      emojiList = (RecyclerView) LayoutInflater.from(getContext())
+          .inflate(R.layout.layout_list_emoji, null);
+      emojiDialog = new AlertDialog.Builder(getContext()).setTitle("Fun with Emoji Chat")
+          .setView(emojiList)
+          .setMessage("Select emoji from below:")
+          .create();
+      LinearLayoutManager layoutManager =
+          new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+      emojiList.setLayoutManager(layoutManager);
+      emojiAdapter = new EmojiAdapter(emojis);
+      emojiAdapter.setClickHandler(emojiClickHandler);
+      emojiList.setAdapter(emojiAdapter);
+      LinearSnapHelper snapHelper = new LinearSnapHelper();
+      emojiDialog.setOnShowListener(dialog -> snapHelper.attachToRecyclerView(emojiList));
+      emojiDialog.setOnDismissListener(dialog -> snapHelper.attachToRecyclerView(null));
+      emojiDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", (dialog, which) -> {
+        dialog.dismiss();
+        if (callback != null && !TextUtils.isEmpty(chatMessage.getMessage())) {
+          callback.onEmojiMessage(chatMessage);
+          // renew
+          emojiAdapter.setCursorPosition(RecyclerView.NO_POSITION);
+          chatMessage = new Message(MemeApp.getApp().getUserName());
+        }
+      });
+      emojiDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel",
+          (dialog, which) -> dialog.dismiss());
+      // emojiDialog.setCancelable(false);
+    }
+
+    if (!emojiDialog.isShowing()) {
+      emojiDialog.show();
+    }
+  }
+
+  public void hideEmojiDialog() {
+    if (emojiDialog != null && emojiDialog.isShowing()) {
+      emojiDialog.dismiss();
+    }
+  }
+
+  // check next emoji from current position
+  public void nextEmoji() {
+    if (emojiDialog == null) {
+      return;
+    }
+
+    int nextEmojiPos = emojiAdapter.getCursorPosition() + 1;
+    RecyclerView.ViewHolder viewHolder = emojiList.findViewHolderForAdapterPosition(nextEmojiPos);
+    if (viewHolder != null) {
+      emojiAdapter.setCursorPosition(nextEmojiPos, viewHolder.itemView);
+    }
+  }
+
+  // select current emoji and send
+  public void selectEmojiAndSend() {
+    if (emojiDialog == null) {
+      return;
+    }
+
+    // 1. manually get emoji
+    Integer emoji = emojiAdapter.getCurrentEmoji();
+    if (emoji != null) {
+      chatMessage.setMessage(EmojiViewHolder.getEmojiByUnicode(emoji));
+      emojiDialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+    }
+  }
+
+  @BindView(R.id.recycler_view) RecyclerView messageList;
+
+  @Nullable @Override
+  public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
+      @Nullable Bundle savedInstanceState) {
+    return inflater.inflate(R.layout.layout_game_chat, container, false);
+  }
+
+  MessagesAdapter messagesAdapter;
+
+  @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    super.onViewCreated(view, savedInstanceState);
+    emojiClickHandler = new EmojiAdapter.EmojiClickHandler() {
+      @Override void onEmojiSelected(Integer emoji, String emojiText) {
+        chatMessage.setMessage(emojiText);
+      }
+    };
+
+    messagesAdapter = new MessagesAdapter();
+    LinearLayoutManager layoutManager =
+        new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, true);
+    messageList.setLayoutManager(layoutManager);
+    messageList.setAdapter(messagesAdapter);
+  }
+
+  public void updateMessages(Collection<Message> messages) {
+    messagesAdapter.addMessages(messages);
+    messageList.postDelayed(() -> messageList.smoothScrollToPosition(0), 200);
+  }
+
+  @Override public void onDestroyView() {
+    super.onDestroyView();
+    emojiClickHandler = null;
+    emojiDialog = null;
+  }
+
+  public interface Callback {
+
+    void onEmojiMessage(Message message);
   }
 }

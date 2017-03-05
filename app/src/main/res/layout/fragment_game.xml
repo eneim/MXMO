@@ -16,6 +16,7 @@
   -->
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
@@ -25,21 +26,117 @@
       android:layout_height="match_parent"
       >
 
-    <im.ene.mxmo.widget.SquareFrameLayout
-        android:id="@+id/game_board"
-        android:layout_width="wrap_content"
+    <View
+        android:id="@+id/dummy_1"
+        android:layout_width="?attr/actionBarSize"
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
+        android:background="@color/cardview_dark_background"
+        android:gravity="center"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
+        />
+
+    <LinearLayout
+        android:id="@+id/game_board_container"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_toEndOf="@id/dummy_1"
+        android:orientation="vertical"
+        >
+
+      <LinearLayout
+          android:id="@+id/game_info_container"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:elevation="1dp"
+          android:gravity="center_vertical"
+          android:minHeight="?attr/actionBarSize"
+          android:orientation="horizontal"
+          >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="?attr/actionBarSize"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:text="TURN"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textStyle="bold"
+            />
+
+        <View
+            android:layout_width="0.5dp"
+            android:layout_height="match_parent"
+            android:layout_marginBottom="4dp"
+            android:layout_marginTop="4dp"
+            android:background="#3e3639"
+            />
+
+        <android.support.v7.widget.AppCompatCheckedTextView
+            android:id="@+id/turn_first_user"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/product_spec_selector"
+            android:ellipsize="end"
+            android:gravity="start|center_vertical"
+            android:maxLines="1"
+            android:minHeight="?attr/actionBarSize"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            tools:text="first_user"
+            />
+
+        <android.support.v7.widget.AppCompatCheckedTextView
+            android:id="@+id/turn_second_user"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/product_spec_selector"
+            android:ellipsize="end"
+            android:gravity="start|center_vertical"
+            android:maxLines="1"
+            android:minHeight="?attr/actionBarSize"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            tools:text="second_user"
+            />
+
+      </LinearLayout>
+
+      <im.ene.mxmo.widget.SquareFrameLayout
+          android:id="@+id/game_board"
+          android:layout_width="wrap_content"
+          android:layout_height="0dp"
+          android:layout_weight="1"
+          />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/dummy_2"
+        android:layout_width="?attr/actionBarSize"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:background="@color/cardview_dark_background"
+        android:gravity="center"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
         />
 
     <FrameLayout
         android:id="@+id/game_chat"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentEnd="true"
-        android:layout_toEndOf="@id/game_board"
-        android:background="#ebe0ff"
+        android:layout_toEndOf="@id/game_board_container"
+        android:layout_toStartOf="@id/dummy_2"
         />
+
   </RelativeLayout>
 
   <View
@@ -47,6 +144,7 @@
       android:layout_width="match_parent"
       android:layout_height="match_parent"
       android:background="#ea5444"
+      tools:visibility="gone"
       />
 
 </FrameLayout>

@@ -19,7 +19,6 @@ package im.ene.mxmo.presentation.game;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.JsonElement;
@@ -28,13 +27,14 @@ import im.ene.mxmo.common.ChildEventListenerAdapter;
 import im.ene.mxmo.common.RxBus;
 import im.ene.mxmo.common.ValueEventListenerAdapter;
 import im.ene.mxmo.common.event.GameChangedEvent;
+import im.ene.mxmo.domain.model.Message;
 import im.ene.mxmo.domain.model.TicTacToe;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Function;
-import io.reactivex.schedulers.Schedulers;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +52,7 @@ class GamePresenterImpl implements GameContract.Presenter {
   @SuppressWarnings("unused") private static final String TAG = "MXMO:GamePresenter";
 
   @SuppressWarnings("WeakerAccess") GameContract.GameView view;
-  @SuppressWarnings("WeakerAccess") CompositeDisposable disposables;
+  @SuppressWarnings("WeakerAccess") protected CompositeDisposable disposables;
 
   protected TicTacToe game;
   @SuppressWarnings("WeakerAccess") @NonNull final DatabaseReference gameDb;
@@ -60,15 +60,20 @@ class GamePresenterImpl implements GameContract.Presenter {
 
   GamePresenterImpl(@NonNull DatabaseReference gameDb) {
     this.gameDb = gameDb;
-    this.disposables = new CompositeDisposable();
   }
 
   @Override public void setView(GameContract.GameView view) {
     this.view = view;
     if (view == null) {
+      if (gameRef != null) {
+        gameRef.removeEventListener(valueEventListener);
+      }
       setGame(null, null);
+      valueEventListener = null;
       disposables.dispose();
+      disposables = null;
     } else {
+      disposables = new CompositeDisposable();
       disposables.add(RxBus.getBus().observe(GameChangedEvent.class)  //
           .observeOn(AndroidSchedulers.mainThread()).subscribe(event -> {
             if (event.game == TicTacToe.DEFAULT) {  // default unknown game
@@ -121,8 +126,6 @@ class GamePresenterImpl implements GameContract.Presenter {
             .filter(pair -> pair.first != null)
             .map(game -> new GameChangedEvent(userName, gameDb.child(game.first), game.second))
             .defaultIfEmpty(new GameChangedEvent(userName, null, TicTacToe.DEFAULT))
-            .subscribeOn(Schedulers.computation())
-            .observeOn(AndroidSchedulers.mainThread())
             .subscribe(event -> RxBus.getBus().send(event));
       }
     });
@@ -202,33 +205,35 @@ class GamePresenterImpl implements GameContract.Presenter {
     return Boolean.TRUE.equals(game.getCurrentTurn());
   }
 
-  ValueEventListener valueEventListener = new ValueEventListener() {
-    @Override public void onDataChange(DataSnapshot snapshot) {
-      if (snapshot != null && snapshot.getValue() != null) {
-        JsonElement json = getApp().getGson().toJsonTree(snapshot.getValue());
-        TicTacToe temp = getApp().getGson().fromJson(json, TicTacToe.class);
-        boolean userInput = getUserSide() == !temp.getCurrentTurn();
-        game.setCurrentTurn(temp.getCurrentTurn());
-        game.getCells().clear();
-        game.getCells().addAll(temp.getCells());
-        game.getMessages().clear();
-        game.getMessages().addAll(temp.getMessages());
-        if (view != null) {
-          view.updateGameState(game.getCells(), userInput);
+  // keep sync the game state
+  @SuppressWarnings("WeakerAccess") ValueEventListener valueEventListener =
+      new ValueEventListenerAdapter() {
+        @Override public void onDataChange(DataSnapshot snapshot) {
+          if (snapshot != null && snapshot.getValue() != null) {
+            JsonElement json = getApp().getGson().toJsonTree(snapshot.getValue());
+            TicTacToe temp = getApp().getGson().fromJson(json, TicTacToe.class);
+            boolean userInput = getUserSide() == !temp.getCurrentTurn();
+            game.setCurrentTurn(temp.getCurrentTurn());
+            game.getCells().clear();
+            game.getCells().addAll(temp.getCells());
+            game.getMessages().clear();
+            game.getMessages().putAll(temp.getMessages());
+            if (view != null) {
+              view.updateCurrentTurn(game.getCurrentTurn());
+              view.updateGameState(game.getCells(), userInput);
+              view.updateMessages(game.getMessages().values());
+            }
+          }
         }
-      }
-    }
+      };
 
-    @Override public void onCancelled(DatabaseError databaseError) {
-
-    }
-  };
-
-  @SuppressWarnings("WeakerAccess") void onGameAbleToStart() {
+  @SuppressWarnings("WeakerAccess") protected void onGameAbleToStart() {
     this.gameRef.addListenerForSingleValueEvent(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot dataSnapshot) {
         if (view != null) {
           view.showHideOverLay(false);
+          view.showUsersName(game.getFirstUser(), game.getSecondUser());
+          view.updateCurrentTurn(game.getCurrentTurn());
           view.letTheGameBegin();
         }
         gameRef.addValueEventListener(valueEventListener);
@@ -236,9 +241,14 @@ class GamePresenterImpl implements GameContract.Presenter {
     });
     this.game.setStarted(true);
     this.game.setCurrentTurn(Boolean.TRUE); // always TRUE, less headache ...
-    for (int i = 0; i < 9; i++) {
-      this.game.getCells().add(MemeApp.INVALID);
+    String[] cells = this.game.getCells().toArray(new String[9]);
+    for (int i = 0; i < cells.length; i++) {
+      if (cells[i] == null) {
+        cells[i] = MemeApp.INVALID;
+      }
     }
+
+    this.game.setCells(Arrays.asList(cells));
     this.gameRef.updateChildren(getApp().parseToHashMap(this.game));
   }
 
@@ -253,6 +263,10 @@ class GamePresenterImpl implements GameContract.Presenter {
 
   @Override public ArrayList<String> getGameState() {
     return this.game.getCells();
+  }
+
+  @Override public void sendChatMessage(Message message) {
+    gameRef.child("messages").push().setValue(message);
   }
 
   private int[][] lines = {
