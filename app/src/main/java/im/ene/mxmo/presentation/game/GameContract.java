@@ -74,6 +74,10 @@ class GameContract {
 
   interface MemeGameView extends GameView {
 
+    int MODE_GAME = 0;
+
+    int MODE_CHAT =1;
+
     void onBluetoothState(int state);
 
     void onMemeScanned(String id);
@@ -81,6 +85,14 @@ class GameContract {
     void onMemeConnected(boolean connected);
 
     void showCalibrateDialog(boolean willShow);
+
+    int getCurrentMode();
+
+    void setCurrentMode(int mode);  // 0: game mode, 1: chat mode
+
+    void moveCursorPosition();
+
+    void prepareEmojiSelectDialog();
   }
 
   interface MemeGamePresenter extends Presenter {

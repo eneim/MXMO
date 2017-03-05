@@ -81,7 +81,7 @@ public class GameChatFragment extends BaseFragment {
     chatMessage = new Message(MemeApp.getApp().getUserName());
   }
 
-  @SuppressWarnings("unused") @OnClick(R.id.select_emoji) void openEmojiDialog() {
+  @SuppressWarnings("unused") @OnClick(R.id.select_emoji) public void showEmojiDialog() {
     if (emojiDialog == null) {
       @SuppressLint("InflateParams")  //
           RecyclerView emojiList = (RecyclerView) LayoutInflater.from(getContext())
@@ -115,6 +115,12 @@ public class GameChatFragment extends BaseFragment {
 
     if (!emojiDialog.isShowing()) {
       emojiDialog.show();
+    }
+  }
+
+  public void hideEmojiDialog() {
+    if (emojiDialog != null && emojiDialog.isShowing()) {
+      emojiDialog.dismiss();
     }
   }
 

@@ -23,8 +23,6 @@ import android.util.Log;
 import com.google.firebase.database.DatabaseReference;
 import com.jins_jp.meme.MemeConnectListener;
 import com.jins_jp.meme.MemeLib;
-import com.jins_jp.meme.MemeRealtimeData;
-import com.jins_jp.meme.MemeRealtimeListener;
 import com.jins_jp.meme.MemeResponse;
 import com.jins_jp.meme.MemeResponseListener;
 import com.jins_jp.meme.MemeScanListener;
@@ -32,8 +30,11 @@ import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.common.RxBus;
 import im.ene.mxmo.common.event.BluetoothConnectionEvent;
 import im.ene.mxmo.domain.model.GyroCalibrator;
+import im.ene.mxmo.library.Action;
+import im.ene.mxmo.library.Command;
 import im.ene.mxmo.library.GyroData;
 import im.ene.mxmo.library.MemeActionFilter;
+import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 
@@ -151,12 +152,77 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
 
   @Override protected void onGameAbleToStart() {
     MemeActionFilter actionFilter = new MemeActionFilter(MemeApp.getApp().getCalibratedGyroDta());
-    actionFilter.addOnEyeActionListener(
-        action -> Log.d(TAG, "onEyeAction() called with: action = [" + action + "]"));
-    actionFilter.addOnHeadActionListener(
-        action -> Log.i(TAG, "onHeadAction() called with: action = [" + action + "]"));
+    actionFilter.addOnEyeActionListener(action -> Flowable.just(action)
+        .filter(command -> command.getAction() != Action.IDLE)
+        .subscribe(action1 -> {
+          if (view != null) {
+            if (view.getCurrentMode() == GameContract.MemeGameView.MODE_CHAT) {
+              handleActionInChatMode(action1);
+            } else if (view.getCurrentMode() == GameContract.MemeGameView.MODE_GAME) {
+              handleActionInGameMode(action1);
+            }
+          }
+        }));
+
+    actionFilter.addOnHeadActionListener(action -> Flowable.just(action)
+        .filter(command -> command.getAction() != Action.IDLE)
+        .subscribe(action1 -> {
+          Log.i(TAG, "onHeadAction() called with: action = [" + action1 + "]");
+          switch (action1.getAction()) {
+            case YAW_LEFT:
+              if (view != null && view.getCurrentMode() != GameContract.MemeGameView.MODE_GAME) {
+                view.setCurrentMode(GameContract.MemeGameView.MODE_GAME);
+              }
+              break;
+            case YAW_RIGHT:
+              if (view != null && view.getCurrentMode() != GameContract.MemeGameView.MODE_CHAT) {
+                view.setCurrentMode(GameContract.MemeGameView.MODE_CHAT);
+              }
+              break;
+            default:
+              break;
+          }
+        }));
+
+    memeLib.startDataReport(data -> Flowable.just(data)
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(actionFilter::onNewData));
 
     super.onGameAbleToStart();
+  }
+
+  private void handleActionInGameMode(Command action) {
+    switch (action.getAction()) {
+      case EYE_TURN_RIGHT:
+        // move cursor + 1;
+        view.moveCursorPosition();
+        break;
+      // do nothing
+      case EYE_TURN_LEFT:
+      default:
+        break;
+    }
+  }
+
+  private Action lastActionInChatMode = null;
+
+  private void handleActionInChatMode(Command action) {
+    // RIGHT: open dialog, select emoji, also check the command right before this, if LEFT --> do nothing (案)
+    // LEFT: go to OK button or Cancel, but not enter, count down to OK or Cancel. (also check command before this?)
+    switch (action.getAction()) {
+      case EYE_TURN_RIGHT:
+        view.prepareEmojiSelectDialog();
+        if (lastActionInChatMode == Action.EYE_TURN_LEFT) {
+          return;
+        } else {
+          // TODO Think
+        }
+        break;
+      default:
+        break;
+    }
+
+    lastActionInChatMode = action.getAction();
   }
 
   // Meme callback
@@ -195,16 +261,6 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
 
     @Override public void memeResponseCallback(MemeResponse memeResponse) {
       // Do nothing
-    }
-  }
-
-  private class MemeRealTimeListenerImpl implements MemeRealtimeListener {
-
-    MemeRealTimeListenerImpl() {
-    }
-
-    @Override public void memeRealtimeCallback(MemeRealtimeData memeRealtimeData) {
-
     }
   }
 }

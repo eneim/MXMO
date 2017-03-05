@@ -124,6 +124,11 @@ public class GameBoardFragment extends BaseFragment implements GameBoardContract
     }
   }
 
+  public void moveCursorPosition() {
+    int nextPos = (adapter.getCursorPosition() + 1) % adapter.getItemCount();
+    adapter.setCursorPosition(nextPos, true);
+  }
+
   public interface Callback {
 
     void onUserMove(List<String> gameState);

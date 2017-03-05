@@ -27,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.google.firebase.database.FirebaseDatabase;
 import im.ene.mxmo.R;
 import io.reactivex.Observable;
@@ -155,5 +156,28 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
         calibrateTimerDialog.dismiss();
       }
     }
+  }
+
+  private int mode = -1;  // init value
+
+  @Override public int getCurrentMode() {
+    return mode;
+  }
+
+  @Override public void setCurrentMode(int mode) {
+    this.mode = mode;
+    if (mode == MODE_GAME) {
+      chatFragment.hideEmojiDialog();
+    }
+    
+    Toast.makeText(getContext(), "MODE: " + mode, Toast.LENGTH_SHORT).show();
+  }
+
+  @Override public void moveCursorPosition() {
+    boardFragment.moveCursorPosition();
+  }
+
+  @Override public void prepareEmojiSelectDialog() {
+    chatFragment.showEmojiDialog();
   }
 }
