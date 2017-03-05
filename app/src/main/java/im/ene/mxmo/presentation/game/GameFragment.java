@@ -36,6 +36,7 @@ import im.ene.mxmo.common.BaseFragment;
 import im.ene.mxmo.common.TextWatcherAdapter;
 import im.ene.mxmo.presentation.game.board.GameBoardFragment;
 import im.ene.mxmo.presentation.game.chat.GameChatFragment;
+import java.util.ArrayList;
 import java.util.List;
 
 import static im.ene.mxmo.MemeApp.getApp;
@@ -185,7 +186,14 @@ public abstract class GameFragment extends BaseFragment
     boardFragment =
         GameBoardFragment.newInstance(getPresenter().getUserSide(), getPresenter().getGameState());
     boardFragment.setTargetFragment(this, 100);
-    chatFragment = GameChatFragment.newInstance();
+
+    // TODO Sync with Firebase
+    ArrayList<Integer> emojis = new ArrayList<>();
+    emojis.add(0x1F600);
+    emojis.add(0x1F602);
+    emojis.add(0x1F605);
+
+    chatFragment = GameChatFragment.newInstance(emojis);
     chatFragment.setTargetFragment(this, 101);
 
     getChildFragmentManager().beginTransaction()

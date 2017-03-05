@@ -15,12 +15,26 @@
   ~ limitations under the License.
   -->
 
-<android.support.v7.widget.RecyclerView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/recycler_view"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/cardview_dark_background"
-    android:clipToPadding="false"
-    android:padding="2dp"
-    />
+    android:orientation="vertical"
+    >
+
+  <android.support.v7.widget.RecyclerView
+      android:id="@+id/recycler_view"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:background="#F0F0F0"
+      />
+
+  <android.support.v7.widget.AppCompatButton
+      android:id="@+id/select_emoji"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:text="EMOJI"
+      style="@style/Widget.AppCompat.Button.Borderless.Colored"
+      />
+</LinearLayout>

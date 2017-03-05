@@ -135,7 +135,6 @@
         android:layout_height="match_parent"
         android:layout_toStartOf="@id/dummy_2"
         android:layout_toEndOf="@id/game_board_container"
-        android:background="#ebe0ff"
         />
 
   </RelativeLayout>
