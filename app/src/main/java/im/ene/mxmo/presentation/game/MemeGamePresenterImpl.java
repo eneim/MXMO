@@ -165,21 +165,30 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
         }));
 
     actionFilter.addOnHeadActionListener(action -> Flowable.just(action)
-        .filter(command -> command.getAction() != Action.IDLE)
+        .filter(command -> command.getAction() != Action.IDLE && view != null)
         .subscribe(action1 -> {
           Log.i(TAG, "onHeadAction() called with: action = [" + action1 + "]");
           switch (action1.getAction()) {
             case YAW_LEFT:
-              if (view != null && view.getCurrentMode() != GameContract.MemeGameView.MODE_GAME) {
+              if (view.getCurrentMode() != GameContract.MemeGameView.MODE_GAME) {
                 view.setCurrentMode(GameContract.MemeGameView.MODE_GAME);
+              } else {
+                handleActionInGameMode(action1);
               }
               break;
             case YAW_RIGHT:
-              if (view != null && view.getCurrentMode() != GameContract.MemeGameView.MODE_CHAT) {
+              if (view.getCurrentMode() != GameContract.MemeGameView.MODE_CHAT) {
                 view.setCurrentMode(GameContract.MemeGameView.MODE_CHAT);
+              } else {
+                handleActionInChatMode(action1);
               }
               break;
             default:
+              if (view.getCurrentMode() == GameContract.MemeGameView.MODE_CHAT) {
+                handleActionInChatMode(action1);
+              } else if (view.getCurrentMode() == GameContract.MemeGameView.MODE_GAME) {
+                handleActionInGameMode(action1);
+              }
               break;
           }
         }));
@@ -197,6 +206,9 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
         // move cursor + 1;
         view.moveCursorPosition();
         break;
+      case YAW_LEFT:
+        view.checkCursor();
+        break;
       // do nothing
       case EYE_TURN_LEFT:
       default:
@@ -204,25 +216,20 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
     }
   }
 
-  private Action lastActionInChatMode = null;
-
   private void handleActionInChatMode(Command action) {
     // RIGHT: open dialog, select emoji, also check the command right before this, if LEFT --> do nothing (案)
     // LEFT: go to OK button or Cancel, but not enter, count down to OK or Cancel. (also check command before this?)
     switch (action.getAction()) {
       case EYE_TURN_RIGHT:
         view.prepareEmojiSelectDialog();
-        if (lastActionInChatMode == Action.EYE_TURN_LEFT) {
-          return;
-        } else {
-          // TODO Think
-        }
+        view.nextEmoji(); // select one;
+        break;
+      case YAW_RIGHT:
+        view.selectEmojiAndSend(true);
         break;
       default:
         break;
     }
-
-    lastActionInChatMode = action.getAction();
   }
 
   // Meme callback

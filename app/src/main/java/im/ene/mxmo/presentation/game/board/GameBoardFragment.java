@@ -125,8 +125,14 @@ public class GameBoardFragment extends BaseFragment implements GameBoardContract
   }
 
   public void moveCursorPosition() {
-    int nextPos = (adapter.getCursorPosition() + 1) % adapter.getItemCount();
-    adapter.setCursorPosition(nextPos, true);
+    adapter.setCursorPosition(adapter.getNextCursorPosition(), true);
+  }
+
+  public void checkCursor() {
+    // only check when user can do this
+    if (callback != null && callback.isMyTurnNow()) {
+      adapter.manuallyCheck(adapter.getCursorPosition());
+    }
   }
 
   public interface Callback {

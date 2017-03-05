@@ -169,7 +169,7 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
     if (mode == MODE_GAME) {
       chatFragment.hideEmojiDialog();
     }
-    
+
     Toast.makeText(getContext(), "MODE: " + mode, Toast.LENGTH_SHORT).show();
   }
 
@@ -177,7 +177,29 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
     boardFragment.moveCursorPosition();
   }
 
+  @Override public void checkCursor() {
+    boardFragment.checkCursor();
+  }
+
   @Override public void prepareEmojiSelectDialog() {
     chatFragment.showEmojiDialog();
+
+    //Handler handler = new Handler();
+    //handler.postDelayed(new Runnable() {
+    //  @Override public void run() {
+    //    nextEmoji();
+    //    handler.postDelayed(this, 1000);
+    //  }
+    //}, 1000);
+  }
+
+  @Override public void nextEmoji() {
+    chatFragment.nextEmoji();
+  }
+
+  @Override public void selectEmojiAndSend(boolean select) {
+    if (select) {
+      chatFragment.selectEmojiAndSend();
+    }
   }
 }

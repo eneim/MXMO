@@ -81,10 +81,13 @@ public class GameChatFragment extends BaseFragment {
     chatMessage = new Message(MemeApp.getApp().getUserName());
   }
 
-  @SuppressWarnings("unused") @OnClick(R.id.select_emoji) public void showEmojiDialog() {
+  RecyclerView emojiList;
+  EmojiAdapter emojiAdapter;
+
+  @SuppressLint("InflateParams") @SuppressWarnings("unused")  //
+  @OnClick(R.id.select_emoji) public void showEmojiDialog() {
     if (emojiDialog == null) {
-      @SuppressLint("InflateParams")  //
-          RecyclerView emojiList = (RecyclerView) LayoutInflater.from(getContext())
+      emojiList = (RecyclerView) LayoutInflater.from(getContext())
           .inflate(R.layout.layout_list_emoji, null);
       emojiDialog = new AlertDialog.Builder(getContext()).setTitle("Fun with Emoji Chat")
           .setView(emojiList)
@@ -93,9 +96,9 @@ public class GameChatFragment extends BaseFragment {
       LinearLayoutManager layoutManager =
           new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
       emojiList.setLayoutManager(layoutManager);
-      EmojiAdapter adapter = new EmojiAdapter(emojis);
-      adapter.setClickHandler(emojiClickHandler);
-      emojiList.setAdapter(adapter);
+      emojiAdapter = new EmojiAdapter(emojis);
+      emojiAdapter.setClickHandler(emojiClickHandler);
+      emojiList.setAdapter(emojiAdapter);
       LinearSnapHelper snapHelper = new LinearSnapHelper();
       emojiDialog.setOnShowListener(dialog -> snapHelper.attachToRecyclerView(emojiList));
       emojiDialog.setOnDismissListener(dialog -> snapHelper.attachToRecyclerView(null));
@@ -104,7 +107,7 @@ public class GameChatFragment extends BaseFragment {
         if (callback != null && !TextUtils.isEmpty(chatMessage.getMessage())) {
           callback.onEmojiMessage(chatMessage);
           // renew
-          adapter.setCursorPosition(RecyclerView.NO_POSITION);
+          emojiAdapter.setCursorPosition(RecyclerView.NO_POSITION);
           chatMessage = new Message(MemeApp.getApp().getUserName());
         }
       });
@@ -121,6 +124,33 @@ public class GameChatFragment extends BaseFragment {
   public void hideEmojiDialog() {
     if (emojiDialog != null && emojiDialog.isShowing()) {
       emojiDialog.dismiss();
+    }
+  }
+
+  // check next emoji from current position
+  public void nextEmoji() {
+    if (emojiDialog == null) {
+      return;
+    }
+
+    int nextEmojiPos = emojiAdapter.getCursorPosition() + 1;
+    RecyclerView.ViewHolder viewHolder = emojiList.findViewHolderForAdapterPosition(nextEmojiPos);
+    if (viewHolder != null) {
+      emojiAdapter.setCursorPosition(nextEmojiPos, viewHolder.itemView);
+    }
+  }
+
+  // select current emoji and send
+  public void selectEmojiAndSend() {
+    if (emojiDialog == null) {
+      return;
+    }
+
+    // 1. manually get emoji
+    Integer emoji = emojiAdapter.getCurrentEmoji();
+    if (emoji != null) {
+      chatMessage.setMessage(EmojiViewHolder.getEmojiByUnicode(emoji));
+      emojiDialog.getButton(DialogInterface.BUTTON_POSITIVE).performClick();
     }
   }
 

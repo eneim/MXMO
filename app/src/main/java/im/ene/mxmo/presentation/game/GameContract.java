@@ -92,7 +92,13 @@ class GameContract {
 
     void moveCursorPosition();
 
+    void checkCursor();
+
     void prepareEmojiSelectDialog();
+
+    void nextEmoji();
+
+    void selectEmojiAndSend(boolean select);
   }
 
   interface MemeGamePresenter extends Presenter {

@@ -81,7 +81,7 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiViewHolder> {
     this.setCursorPosition(cursorPosition, null);
   }
 
-  private void setCursorPosition(int cursorPosition, View view) {
+  void setCursorPosition(int cursorPosition, View view) {
     if (this.cursorPosition != cursorPosition) {
       this.cursorPosition = cursorPosition;
       notifyDataSetChanged();
@@ -109,6 +109,14 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiViewHolder> {
 
   int getRealPosition(EmojiViewHolder holder) {
     return holder.getAdapterPosition() % emojis.size();
+  }
+
+  Integer getCurrentEmoji() {
+    if (cursorPosition >= 0) {
+      return emojis.get(cursorPosition % emojis.size());
+    } else {
+      return null;
+    }
   }
 
   static abstract class EmojiClickHandler implements OnItemClickListener {
