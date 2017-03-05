@@ -18,6 +18,7 @@ package im.ene.mxmo.domain.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by eneim on 2/26/17.
@@ -89,8 +90,8 @@ public class TicTacToe {
     return cells;
   }
 
-  @Deprecated public void setCells(ArrayList<String> cells) {
-    this.cells = cells;
+  public void setCells(List<String> cells) {
+    this.cells = new ArrayList<>(cells);
   }
 
   public long getCreatedAt() {

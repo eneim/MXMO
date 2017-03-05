@@ -35,6 +35,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +67,9 @@ class GamePresenterImpl implements GameContract.Presenter {
   @Override public void setView(GameContract.GameView view) {
     this.view = view;
     if (view == null) {
+      gameRef.removeEventListener(valueEventListener);
       setGame(null, null);
+      valueEventListener = null;
       disposables.dispose();
     } else {
       disposables.add(RxBus.getBus().observe(GameChangedEvent.class)  //
@@ -238,9 +241,14 @@ class GamePresenterImpl implements GameContract.Presenter {
     });
     this.game.setStarted(true);
     this.game.setCurrentTurn(Boolean.TRUE); // always TRUE, less headache ...
-    for (int i = 0; i < 9; i++) {
-      this.game.getCells().add(MemeApp.INVALID);
+    String[] cells = this.game.getCells().toArray(new String[9]);
+    for (int i = 0; i < cells.length; i++) {
+      if (cells[i] == null) {
+        cells[i] = MemeApp.INVALID;
+      }
     }
+
+    this.game.setCells(Arrays.asList(cells));
     this.gameRef.updateChildren(getApp().parseToHashMap(this.game));
   }
 

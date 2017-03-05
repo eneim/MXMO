@@ -16,6 +16,7 @@
 
 package im.ene.mxmo.presentation.game.chat;
 
+import android.support.v4.view.GravityCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
@@ -46,10 +47,16 @@ public class MessageViewHolder extends RecyclerView.ViewHolder {
   }
 
   void bind(MessagesAdapter adapter, Message message) {
-    if (MemeApp.getApp().getUserName().equals(message.getUserName())) {
+    if (message.getUserName().equals(MemeApp.getApp().getUserName())) {
+      // expensive
+      userName.setGravity(GravityCompat.START);
+      timeStamp.setGravity(GravityCompat.START);
       leftDummy.setVisibility(View.GONE);
       rightDummy.setVisibility(View.VISIBLE);
     } else {
+      // expensive
+      userName.setGravity(GravityCompat.END);
+      timeStamp.setGravity(GravityCompat.END);
       leftDummy.setVisibility(View.VISIBLE);
       rightDummy.setVisibility(View.GONE);
     }
