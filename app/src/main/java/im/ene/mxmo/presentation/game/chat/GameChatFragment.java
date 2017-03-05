@@ -25,6 +25,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.LinearSnapHelper;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -100,9 +101,10 @@ public class GameChatFragment extends BaseFragment {
       emojiDialog.setOnDismissListener(dialog -> snapHelper.attachToRecyclerView(null));
       emojiDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", (dialog, which) -> {
         dialog.dismiss();
-        if (callback != null) {
+        if (callback != null && !TextUtils.isEmpty(chatMessage.getMessage())) {
           callback.onEmojiMessage(chatMessage);
           // renew
+          adapter.setCursorPosition(RecyclerView.NO_POSITION);
           chatMessage = new Message(MemeApp.getApp().getUserName());
         }
       });

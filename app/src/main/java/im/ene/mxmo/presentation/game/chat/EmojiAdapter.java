@@ -77,15 +77,23 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiViewHolder> {
     return Integer.MAX_VALUE;
   }
 
-  void setCursorPosition(int cursorPosition, View view) {
+  void setCursorPosition(int cursorPosition) {
+    this.setCursorPosition(cursorPosition, null);
+  }
+
+  private void setCursorPosition(int cursorPosition, View view) {
     if (this.cursorPosition != cursorPosition) {
       this.cursorPosition = cursorPosition;
       notifyDataSetChanged();
       if (this.recyclerView != null) {
         this.recyclerView.post(() -> {
-          int xDiff = (int) ((view.getRight() + view.getLeft()) / 2.0
-              - (recyclerView.getRight() + recyclerView.getLeft()) / 2.0);
-          recyclerView.smoothScrollBy(xDiff, 0);
+          if (view != null) {
+            int xDiff = (int) ((view.getRight() + view.getLeft()) / 2.0
+                - (recyclerView.getRight() + recyclerView.getLeft()) / 2.0);
+            recyclerView.smoothScrollBy(xDiff, 0);
+          } else {
+            recyclerView.smoothScrollToPosition(0);
+          }
         });
       }
     }
