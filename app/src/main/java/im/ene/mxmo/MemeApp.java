@@ -120,7 +120,11 @@ public class MemeApp extends Application {
   }
 
   public void setUserName(String userName) {
-    preferences().edit().putString(KEY_USER_NAME, userName).apply();
+    if (userName != null) {
+      preferences().edit().putString(KEY_USER_NAME, userName).apply();
+    } else {
+      preferences().edit().remove(KEY_USER_NAME).apply();
+    }
   }
 
   public PrettyTime getPrettyTime() {
@@ -147,6 +151,10 @@ public class MemeApp extends Application {
   }
 
   public void saveCalibratedGyroData(GyroData data) {
-    preferences().edit().putString(KEY_GYRO_DATA, getGson().toJson(data)).apply();
+    if (data != null) {
+      preferences().edit().putString(KEY_GYRO_DATA, getGson().toJson(data)).apply();
+    } else {
+      preferences().edit().remove(KEY_GYRO_DATA).apply();
+    }
   }
 }

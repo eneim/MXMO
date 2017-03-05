@@ -34,6 +34,12 @@
     <activity
         android:name=".presentation.game.GameActivity"
         android:screenOrientation="sensorLandscape">
+    </activity>
+
+    <activity
+        android:name=".presentation.launch.LaunchActivity"
+        android:noHistory="true"
+        android:screenOrientation="sensorLandscape">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
 
