@@ -19,7 +19,6 @@ package im.ene.mxmo.presentation.game;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.JsonElement;
@@ -28,6 +27,7 @@ import im.ene.mxmo.common.ChildEventListenerAdapter;
 import im.ene.mxmo.common.RxBus;
 import im.ene.mxmo.common.ValueEventListenerAdapter;
 import im.ene.mxmo.common.event.GameChangedEvent;
+import im.ene.mxmo.domain.model.Message;
 import im.ene.mxmo.domain.model.TicTacToe;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -204,7 +204,7 @@ class GamePresenterImpl implements GameContract.Presenter {
 
   // keep sync the game state
   @SuppressWarnings("WeakerAccess") ValueEventListener valueEventListener =
-      new ValueEventListener() {
+      new ValueEventListenerAdapter() {
         @Override public void onDataChange(DataSnapshot snapshot) {
           if (snapshot != null && snapshot.getValue() != null) {
             JsonElement json = getApp().getGson().toJsonTree(snapshot.getValue());
@@ -214,16 +214,13 @@ class GamePresenterImpl implements GameContract.Presenter {
             game.getCells().clear();
             game.getCells().addAll(temp.getCells());
             game.getMessages().clear();
-            game.getMessages().addAll(temp.getMessages());
+            game.getMessages().putAll(temp.getMessages());
             if (view != null) {
               view.updateCurrentTurn(game.getCurrentTurn());
               view.updateGameState(game.getCells(), userInput);
+              view.updateMessages(game.getMessages().values());
             }
           }
-        }
-
-        @Override public void onCancelled(DatabaseError databaseError) {
-
         }
       };
 
@@ -258,6 +255,10 @@ class GamePresenterImpl implements GameContract.Presenter {
 
   @Override public ArrayList<String> getGameState() {
     return this.game.getCells();
+  }
+
+  @Override public void sendChatMessage(Message message) {
+    gameRef.child("messages").push().setValue(message);
   }
 
   private int[][] lines = {

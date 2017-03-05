@@ -24,10 +24,13 @@ public class Message {
 
   private final String userName;
 
+  private final Long createdAt;
+
   private String message; // current: only Emoji
 
   public Message(String userName) {
     this.userName = userName;
+    this.createdAt = System.currentTimeMillis();
   }
 
   public void setMessage(String message) {
@@ -40,5 +43,9 @@ public class Message {
 
   public String getMessage() {
     return message;
+  }
+
+  public Long getCreatedAt() {
+    return createdAt;
   }
 }

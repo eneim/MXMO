@@ -58,12 +58,12 @@ public class GameBoardFragment extends BaseFragment implements GameBoardContract
   Boolean side;
   ArrayList<String> gameState;
 
-  BoardStateChangeListener listener;
+  Callback callback;
 
   @Override public void onAttach(Context context) {
     super.onAttach(context);
-    if (getTargetFragment() instanceof BoardStateChangeListener) {
-      this.listener = (BoardStateChangeListener) getTargetFragment();
+    if (getTargetFragment() instanceof Callback) {
+      this.callback = (Callback) getTargetFragment();
     }
   }
 
@@ -86,13 +86,13 @@ public class GameBoardFragment extends BaseFragment implements GameBoardContract
     adapter = new BoardAdapter(this.side, this.gameState);
     adapter.setItemClickListener(new BoardAdapter.ItemClickHandler() {
       @Override void onChecked(View view, int pos) {
-        if (listener != null) {
-          listener.onUserMove(adapter.getGameState());
+        if (callback != null) {
+          callback.onUserMove(adapter.getGameState());
         }
       }
 
       @Override boolean cellCheckable(View view, int pos) {
-        return listener != null && listener.isMyTurnNow();
+        return callback != null && callback.isMyTurnNow();
       }
     });
 
@@ -124,7 +124,7 @@ public class GameBoardFragment extends BaseFragment implements GameBoardContract
     }
   }
 
-  public interface BoardStateChangeListener {
+  public interface Callback {
 
     void onUserMove(List<String> gameState);
 

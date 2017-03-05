@@ -17,6 +17,7 @@
 package im.ene.mxmo.presentation.game.chat;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -28,8 +29,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import butterknife.OnClick;
+import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.R;
 import im.ene.mxmo.common.BaseFragment;
+import im.ene.mxmo.domain.model.Message;
 import java.util.ArrayList;
 
 /**
@@ -51,6 +54,14 @@ public class GameChatFragment extends BaseFragment {
   }
 
   ArrayList<Integer> emojis;
+  Callback callback;
+
+  @Override public void onAttach(Context context) {
+    super.onAttach(context);
+    if (getTargetFragment() instanceof Callback) {
+      this.callback = (Callback) getTargetFragment();
+    }
+  }
 
   @Override public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -59,10 +70,14 @@ public class GameChatFragment extends BaseFragment {
       //noinspection ConstantConditions
       emojis.addAll(getArguments().getIntegerArrayList(ARG_CHAT_EMOJIS));
     }
+
+    chatMessage = new Message(MemeApp.getApp().getUserName());
   }
 
   AlertDialog emojiDialog;
   EmojiAdapter.EmojiClickHandler emojiClickHandler;
+
+  Message chatMessage;  // content change on every emoji select
 
   @SuppressWarnings("unused") @OnClick(R.id.select_emoji) void openEmojiDialog() {
     if (emojiDialog == null) {
@@ -80,9 +95,17 @@ public class GameChatFragment extends BaseFragment {
       adapter.setClickHandler(emojiClickHandler);
       emojiList.setAdapter(adapter);
       LinearSnapHelper snapHelper = new LinearSnapHelper();
-      snapHelper.attachToRecyclerView(emojiList);
+      emojiDialog.setOnShowListener(dialog -> snapHelper.attachToRecyclerView(emojiList));
       emojiDialog.setOnDismissListener(dialog -> snapHelper.attachToRecyclerView(null));
-      emojiDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK",
+      emojiDialog.setButton(DialogInterface.BUTTON_POSITIVE, "OK", (dialog, which) -> {
+        dialog.dismiss();
+        if (callback != null) {
+          callback.onEmojiMessage(chatMessage);
+          // renew
+          chatMessage = new Message(MemeApp.getApp().getUserName());
+        }
+      });
+      emojiDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel",
           (dialog, which) -> dialog.dismiss());
       // emojiDialog.setCancelable(false);
     }
@@ -102,7 +125,7 @@ public class GameChatFragment extends BaseFragment {
     super.onViewCreated(view, savedInstanceState);
     emojiClickHandler = new EmojiAdapter.EmojiClickHandler() {
       @Override void onEmojiSelected(Integer emoji, String emojiText) {
-        // TODO
+        chatMessage.setMessage(emojiText);
       }
     };
   }
@@ -111,5 +134,10 @@ public class GameChatFragment extends BaseFragment {
     super.onDestroyView();
     emojiClickHandler = null;
     emojiDialog = null;
+  }
+
+  public interface Callback {
+
+    void onEmojiMessage(Message message);
   }
 }

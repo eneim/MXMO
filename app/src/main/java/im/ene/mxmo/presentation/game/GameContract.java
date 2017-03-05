@@ -18,7 +18,9 @@ package im.ene.mxmo.presentation.game;
 
 import android.app.Activity;
 import android.support.annotation.NonNull;
+import im.ene.mxmo.domain.model.Message;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -38,6 +40,8 @@ class GameContract {
     void letTheGameBegin();
 
     void updateGameState(List<String> cells, boolean userInput);
+
+    void updateMessages(Collection<Message> messages);
 
     void showUsersName(String firstUser, String secondUser);
 
@@ -59,6 +63,8 @@ class GameContract {
     @NonNull Boolean getCurrentTurn();
 
     ArrayList<String> getGameState();
+
+    void sendChatMessage(Message message);
 
     /**
      * @return username of the winner, null if it is not done yet.

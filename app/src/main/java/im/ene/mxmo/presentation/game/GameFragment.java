@@ -34,9 +34,11 @@ import butterknife.BindView;
 import im.ene.mxmo.R;
 import im.ene.mxmo.common.BaseFragment;
 import im.ene.mxmo.common.TextWatcherAdapter;
+import im.ene.mxmo.domain.model.Message;
 import im.ene.mxmo.presentation.game.board.GameBoardFragment;
 import im.ene.mxmo.presentation.game.chat.GameChatFragment;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static im.ene.mxmo.MemeApp.getApp;
@@ -47,7 +49,8 @@ import static im.ene.mxmo.MemeApp.getApp;
  * @since 1.0.0
  */
 public abstract class GameFragment extends BaseFragment
-    implements GameContract.GameView, GameBoardFragment.BoardStateChangeListener {
+    implements GameContract.GameView, GameBoardFragment.Callback,
+    GameChatFragment.Callback {
 
   @SuppressWarnings("unused") private static final String TAG = "MXMO:GameFragment";
 
@@ -210,6 +213,10 @@ public abstract class GameFragment extends BaseFragment
     }
   }
 
+  @Override public void updateMessages(Collection<Message> messages) {
+    // TODO
+  }
+
   @NonNull protected abstract GameContract.Presenter getPresenter();
 
   // Other interfaces
@@ -221,5 +228,9 @@ public abstract class GameFragment extends BaseFragment
 
   @Override public boolean isMyTurnNow() {
     return getPresenter().getUserSide() == getPresenter().getCurrentTurn();
+  }
+
+  @Override public void onEmojiMessage(Message message) {
+    getPresenter().sendChatMessage(message);
   }
 }
