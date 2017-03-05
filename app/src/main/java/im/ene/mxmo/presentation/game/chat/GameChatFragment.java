@@ -81,6 +81,12 @@ public class GameChatFragment extends BaseFragment {
     chatMessage = new Message(MemeApp.getApp().getUserName());
   }
 
+  public void setEmojis(ArrayList<Integer> emojis) {
+    this.emojis = new ArrayList<>();
+    //noinspection ConstantConditions
+    this.emojis.addAll(emojis);
+  }
+
   RecyclerView emojiList;
   EmojiAdapter emojiAdapter;
 

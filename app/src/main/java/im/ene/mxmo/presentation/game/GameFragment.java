@@ -31,15 +31,19 @@ import android.widget.CheckedTextView;
 import android.widget.EditText;
 import android.widget.Toast;
 import butterknife.BindView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.FirebaseDatabase;
 import im.ene.mxmo.R;
 import im.ene.mxmo.common.BaseFragment;
 import im.ene.mxmo.common.TextWatcherAdapter;
+import im.ene.mxmo.common.ValueEventListenerAdapter;
 import im.ene.mxmo.domain.model.Message;
 import im.ene.mxmo.presentation.game.board.GameBoardFragment;
 import im.ene.mxmo.presentation.game.chat.GameChatFragment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static im.ene.mxmo.MemeApp.getApp;
 
@@ -189,7 +193,6 @@ public abstract class GameFragment extends BaseFragment
         GameBoardFragment.newInstance(getPresenter().getUserSide(), getPresenter().getGameState());
     boardFragment.setTargetFragment(this, 100);
 
-    // TODO Sync with Firebase
     ArrayList<Integer> emojis = new ArrayList<>();
     emojis.add(0x1F600);
     emojis.add(0x1F602);
@@ -202,6 +205,18 @@ public abstract class GameFragment extends BaseFragment
         .replace(R.id.game_board, boardFragment)
         .replace(R.id.game_chat, chatFragment)
         .commit();
+
+    FirebaseDatabase.getInstance().getReference("emojis") //
+        .addListenerForSingleValueEvent(new ValueEventListenerAdapter() {
+          @Override public void onDataChange(DataSnapshot snapshot) {
+            if (snapshot != null && snapshot.getValue() instanceof ArrayList) {
+              ArrayList<Integer> emojis = new ArrayList<>();
+              ArrayList<?> values = (ArrayList<?>) snapshot.getValue();
+              values.forEach((Consumer<Object>) o -> emojis.add(Integer.decode(o.toString())));
+              chatFragment.setEmojis(emojis);
+            }
+          }
+        });
   }
 
   @Override public void updateGameState(List<String> cells, boolean userInput) {
