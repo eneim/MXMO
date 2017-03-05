@@ -27,6 +27,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckedTextView;
 import android.widget.EditText;
 import android.widget.Toast;
 import butterknife.BindView;
@@ -67,6 +68,9 @@ public abstract class GameFragment extends BaseFragment
   }
 
   protected @BindView(R.id.overlay) View overlayView;
+  @BindView(R.id.turn_first_user) CheckedTextView firstUserName;
+  @BindView(R.id.turn_second_user) CheckedTextView secondUserName;
+
   AlertDialog welcomeDialog;
   protected GameBoardFragment boardFragment;
   protected GameChatFragment chatFragment;
@@ -101,6 +105,17 @@ public abstract class GameFragment extends BaseFragment
   }
 
   // GameView interface
+
+  @Override public void showUsersName(String firstUser, String secondUser) {
+    firstUserName.setText(firstUser);
+    secondUserName.setText(secondUser);
+  }
+
+  @Override public void updateCurrentTurn(Boolean turn) {
+    boolean firstUserChecked = Boolean.TRUE.equals(turn);
+    firstUserName.setChecked(firstUserChecked);
+    secondUserName.setChecked(!firstUserChecked);
+  }
 
   @Override public void showHideOverLay(boolean willShow) {
     int overlayViewVisibility = willShow ? View.VISIBLE : View.GONE;

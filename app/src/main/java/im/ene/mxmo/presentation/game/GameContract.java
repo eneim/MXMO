@@ -38,6 +38,10 @@ class GameContract {
     void letTheGameBegin();
 
     void updateGameState(List<String> cells, boolean userInput);
+
+    void showUsersName(String firstUser, String secondUser);
+
+    void updateCurrentTurn(Boolean turn); // TRUE: first user, FALSE: second user
   }
 
   interface Presenter {

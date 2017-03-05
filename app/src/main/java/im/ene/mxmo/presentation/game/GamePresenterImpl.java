@@ -202,33 +202,38 @@ class GamePresenterImpl implements GameContract.Presenter {
     return Boolean.TRUE.equals(game.getCurrentTurn());
   }
 
-  ValueEventListener valueEventListener = new ValueEventListener() {
-    @Override public void onDataChange(DataSnapshot snapshot) {
-      if (snapshot != null && snapshot.getValue() != null) {
-        JsonElement json = getApp().getGson().toJsonTree(snapshot.getValue());
-        TicTacToe temp = getApp().getGson().fromJson(json, TicTacToe.class);
-        boolean userInput = getUserSide() == !temp.getCurrentTurn();
-        game.setCurrentTurn(temp.getCurrentTurn());
-        game.getCells().clear();
-        game.getCells().addAll(temp.getCells());
-        game.getMessages().clear();
-        game.getMessages().addAll(temp.getMessages());
-        if (view != null) {
-          view.updateGameState(game.getCells(), userInput);
+  // keep sync the game state
+  @SuppressWarnings("WeakerAccess") ValueEventListener valueEventListener =
+      new ValueEventListener() {
+        @Override public void onDataChange(DataSnapshot snapshot) {
+          if (snapshot != null && snapshot.getValue() != null) {
+            JsonElement json = getApp().getGson().toJsonTree(snapshot.getValue());
+            TicTacToe temp = getApp().getGson().fromJson(json, TicTacToe.class);
+            boolean userInput = getUserSide() == !temp.getCurrentTurn();
+            game.setCurrentTurn(temp.getCurrentTurn());
+            game.getCells().clear();
+            game.getCells().addAll(temp.getCells());
+            game.getMessages().clear();
+            game.getMessages().addAll(temp.getMessages());
+            if (view != null) {
+              view.updateCurrentTurn(game.getCurrentTurn());
+              view.updateGameState(game.getCells(), userInput);
+            }
+          }
         }
-      }
-    }
 
-    @Override public void onCancelled(DatabaseError databaseError) {
+        @Override public void onCancelled(DatabaseError databaseError) {
 
-    }
-  };
+        }
+      };
 
   @SuppressWarnings("WeakerAccess") void onGameAbleToStart() {
     this.gameRef.addListenerForSingleValueEvent(new ValueEventListenerAdapter() {
       @Override public void onDataChange(DataSnapshot dataSnapshot) {
         if (view != null) {
           view.showHideOverLay(false);
+          view.showUsersName(game.getFirstUser(), game.getSecondUser());
+          view.updateCurrentTurn(game.getCurrentTurn());
           view.letTheGameBegin();
         }
         gameRef.addValueEventListener(valueEventListener);

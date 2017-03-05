@@ -28,6 +28,7 @@
     <shape android:shape="rectangle"
         android:tint="#ffff00"
         android:tintMode="src_in">
+      <stroke android:color="#1e90ff" android:width="4dp"/>
     </shape>
   </item>
 </selector>
