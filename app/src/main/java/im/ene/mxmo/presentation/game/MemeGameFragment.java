@@ -134,7 +134,7 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
   @Override public void showCalibrateDialog(boolean willShow) {
     if (willShow) {
       if (calibrateTimerDialog == null) {
-        int waitLength = 12;
+        int waitLength = 15;
         @SuppressLint("InflateParams") TextView timer = (TextView) LayoutInflater.from(getContext())
             .inflate(R.layout.widget_text_countdown, null);
         Disposable disposable = Observable.interval(1000, TimeUnit.MILLISECONDS)
@@ -142,7 +142,7 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
             .subscribe(aLong -> timer.setText("ETA: " + (waitLength - aLong) + " second(s)."));
 
         calibrateTimerDialog = new AlertDialog.Builder(getContext()).setCancelable(false)
-            .setTitle("Calibrating your Meme, please wait.")
+            .setTitle("Calibrating your Meme, please freeze your head.")
             .setView(timer)
             .setOnDismissListener(dialog -> disposable.dispose())
             .create();
