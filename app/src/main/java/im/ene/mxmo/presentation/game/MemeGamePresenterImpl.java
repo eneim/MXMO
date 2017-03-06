@@ -83,6 +83,9 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
       } else {
         bluetoothAdapter.disable();
       }
+    } else if (expected && bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON) {
+      RxBus.getBus()
+          .send(new BluetoothConnectionEvent(BluetoothAdapter.STATE_ON, BluetoothAdapter.STATE_ON));
     }
   }
 

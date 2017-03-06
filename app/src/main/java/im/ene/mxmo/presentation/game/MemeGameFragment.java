@@ -182,14 +182,6 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
 
   @Override public void prepareEmojiSelectDialog(DialogInterface.OnShowListener listener) {
     chatFragment.showEmojiDialog(listener);
-
-    //Handler handler = new Handler();
-    //handler.postDelayed(new Runnable() {
-    //  @Override public void run() {
-    //    nextEmoji();
-    //    handler.postDelayed(this, 1000);
-    //  }
-    //}, 1000);
   }
 
   @Override public void nextEmoji() {
