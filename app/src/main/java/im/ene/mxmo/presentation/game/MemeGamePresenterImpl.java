@@ -200,6 +200,11 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
     super.onGameAbleToStart();
   }
 
+  @Override public void endGame() {
+    memeLib.stopDataReport();
+    super.endGame();
+  }
+
   private void handleActionInGameMode(Command action) {
     switch (action.getAction()) {
       case EYE_TURN_RIGHT:
@@ -207,6 +212,8 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
         view.moveCursorPosition();
         break;
       case YAW_LEFT:
+        // TODO need to change this. Otherwise user will always check the cursor after moving from
+        // Chat mode to Game mode
         view.checkCursor();
         break;
       // do nothing

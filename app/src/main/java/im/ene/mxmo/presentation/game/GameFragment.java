@@ -33,6 +33,7 @@ import android.widget.Toast;
 import butterknife.BindView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.FirebaseDatabase;
+import im.ene.mxmo.MemeApp;
 import im.ene.mxmo.R;
 import im.ene.mxmo.common.BaseFragment;
 import im.ene.mxmo.common.TextWatcherAdapter;
@@ -225,11 +226,20 @@ public abstract class GameFragment extends BaseFragment
     boardFragment.syncBoard(cells, userInput);
     String winner = getPresenter().judge();
     if (winner != null) {
+      getPresenter().endGame();
       new AlertDialog.Builder(getContext()).setCancelable(false)
           .setTitle("Congratulation!!!")
           .setMessage(winner + " has won the game!")
           .setPositiveButton("Done", (dialog, which) -> dialog.dismiss())
           .setOnDismissListener(dialog -> getActivity().finish())
+          .create()
+          .show();
+    } else if (!cells.contains(MemeApp.INVALID)) {
+      getPresenter().endGame();
+      new AlertDialog.Builder(getContext()).setCancelable(false)
+          .setTitle("Game End!!!")
+          .setMessage("This is a due...")
+          .setPositiveButton("Done", (dialog, which) -> getActivity().finish())
           .create()
           .show();
     }

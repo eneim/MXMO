@@ -296,4 +296,10 @@ class GamePresenterImpl implements GameContract.Presenter {
 
     return null;
   }
+
+  @Override public void endGame() {
+    if (gameRef != null) {
+      gameRef.removeEventListener(valueEventListener);
+    }
+  }
 }

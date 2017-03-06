@@ -70,6 +70,8 @@ class GameContract {
      * @return username of the winner, null if it is not done yet.
      */
     String judge();
+
+    void endGame();
   }
 
   interface MemeGameView extends GameView {

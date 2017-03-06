@@ -19,6 +19,7 @@ package im.ene.mxmo.presentation.game;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
+import android.view.WindowManager;
 import im.ene.mxmo.common.BaseActivity;
 
 import static im.ene.mxmo.MemeApp.getApp;
@@ -36,7 +37,13 @@ public class GameActivity extends BaseActivity {
 
   @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     maybeRequestLocationPermission();
+  }
+
+  @Override protected void onDestroy() {
+    super.onDestroy();
+    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
   }
 
   @Override protected void onPermissionGranted(String permission, boolean granted) {
