@@ -21,6 +21,22 @@ android {
   compileSdkVersion 25
   buildToolsVersion "25.0.2"
 
+  signingConfigs {
+    release {
+      keyAlias "debug"
+      keyPassword "android"
+      storeFile file("debug.jks")
+      storePassword "android"
+    }
+
+    debug {
+      keyAlias "debug"
+      keyPassword "android"
+      storeFile file("debug.jks")
+      storePassword "android"
+    }
+  }
+
   defaultConfig {
     applicationId "im.ene.mxmo"
     minSdkVersion 21
@@ -36,6 +52,17 @@ android {
     release {
       minifyEnabled false
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+      signingConfig signingConfigs.debug
+    }
+
+    debug {
+      // applicationIdSuffix ".debug"
+
+      minifyEnabled false
+      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+      signingConfig signingConfigs.debug
     }
   }
 
