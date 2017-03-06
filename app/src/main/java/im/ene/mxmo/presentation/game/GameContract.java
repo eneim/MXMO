@@ -17,6 +17,7 @@
 package im.ene.mxmo.presentation.game;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 import im.ene.mxmo.domain.model.Message;
 import java.util.ArrayList;
@@ -96,7 +97,7 @@ class GameContract {
 
     void checkCursor();
 
-    void prepareEmojiSelectDialog();
+    void prepareEmojiSelectDialog(DialogInterface.OnShowListener listener);
 
     void nextEmoji();
 

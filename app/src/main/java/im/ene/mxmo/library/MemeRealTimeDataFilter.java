@@ -43,9 +43,9 @@ class MemeRealTimeDataFilter {
   MemeRealTimeDataFilter(@NonNull Source cmdSource, @NonNull GyroData calibGyroData) {
     this.cmdSource = cmdSource;
     if (cmdSource == Source.HEAD) {
-      IDLE_TIME = 750;  // TODO optimize this value
+      IDLE_TIME = 850;  // TODO optimize this value
     } else {
-      IDLE_TIME = 250;  // TODO optimize this value
+      IDLE_TIME = 150;  // TODO optimize this value
     }
 
     this.calibGyroData = calibGyroData;

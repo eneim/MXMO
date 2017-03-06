@@ -91,7 +91,7 @@ public class GameChatFragment extends BaseFragment {
   EmojiAdapter emojiAdapter;
 
   @SuppressLint("InflateParams") @SuppressWarnings("unused")  //
-  @OnClick(R.id.select_emoji) public void showEmojiDialog() {
+  @OnClick(R.id.select_emoji) public void showEmojiDialog(DialogInterface.OnShowListener listener) {
     if (emojiDialog == null) {
       emojiList = (RecyclerView) LayoutInflater.from(getContext())
           .inflate(R.layout.layout_list_emoji, null);
@@ -120,6 +120,7 @@ public class GameChatFragment extends BaseFragment {
       emojiDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel",
           (dialog, which) -> dialog.dismiss());
       // emojiDialog.setCancelable(false);
+      emojiDialog.setOnShowListener(listener);
     }
 
     if (!emojiDialog.isShowing()) {

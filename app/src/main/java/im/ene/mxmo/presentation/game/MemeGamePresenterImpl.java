@@ -66,7 +66,12 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
           .filter(__ -> this.view != null)
           .subscribe(event -> this.view.onBluetoothState(Math.max(event.state, event.prevState))));
     } else {
+      memeLib.stopDataReport();
       memeLib = null;
+      if (actionFilter != null) {
+        actionFilter.removeOnEyeActionListener(null);
+        actionFilter.removeOnHeadActionListener(null);
+      }
     }
   }
 
@@ -132,14 +137,22 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
 
         MemeApp.getApp().saveCalibratedGyroData(calibrator.getCalibrated());
         memeLib.stopDataReport();
-        initMemeGame();
+        if (!gameInitCalled) {
+          initMemeGame();
+        }
       });
     } else {
-      initMemeGame();
+      if (!gameInitCalled) {
+        initMemeGame();
+      }
     }
   }
 
+  // dirty trick...
+  private boolean gameInitCalled = false;
+
   @SuppressWarnings("WeakerAccess") void initMemeGame() {
+    gameInitCalled = true;
     Single.just(view != null && memeId != null)
         .filter(Boolean.TRUE::equals)
         .observeOn(AndroidSchedulers.mainThread())
@@ -150,11 +163,14 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
         });
   }
 
+  private MemeActionFilter actionFilter;
+
   @Override protected void onGameAbleToStart() {
-    MemeActionFilter actionFilter = new MemeActionFilter(MemeApp.getApp().getCalibratedGyroDta());
+    actionFilter = new MemeActionFilter(MemeApp.getApp().getCalibratedGyroDta());
     actionFilter.addOnEyeActionListener(action -> Flowable.just(action)
         .filter(command -> command.getAction() != Action.IDLE)
         .subscribe(action1 -> {
+          Log.w(TAG, "onEyeAction() called with: action = [" + action1 + "]");
           if (view != null) {
             if (view.getCurrentMode() == GameContract.MemeGameView.MODE_CHAT) {
               handleActionInChatMode(action1);
@@ -201,6 +217,10 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
   }
 
   @Override public void endGame() {
+    if (actionFilter != null) {
+      actionFilter.removeOnEyeActionListener(null);
+      actionFilter.removeOnHeadActionListener(null);
+    }
     memeLib.stopDataReport();
     super.endGame();
   }
@@ -208,12 +228,12 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
   private void handleActionInGameMode(Command action) {
     switch (action.getAction()) {
       case EYE_TURN_RIGHT:
+      case ROLL_RIGHT:  // backup action
         // move cursor + 1;
         view.moveCursorPosition();
         break;
       case YAW_LEFT:
-        // TODO need to change this. Otherwise user will always check the cursor after moving from
-        // Chat mode to Game mode
+      case PITCH_BACKWARD:  // backup action
         view.checkCursor();
         break;
       // do nothing
@@ -228,10 +248,14 @@ class MemeGamePresenterImpl extends GamePresenterImpl implements GameContract.Me
     // LEFT: go to OK button or Cancel, but not enter, count down to OK or Cancel. (also check command before this?)
     switch (action.getAction()) {
       case EYE_TURN_RIGHT:
-        view.prepareEmojiSelectDialog();
-        view.nextEmoji(); // select one;
+      case ROLL_RIGHT:  // backup action
+        view.prepareEmojiSelectDialog(dialog -> {
+          view.nextEmoji(); // select one;
+        });
+        view.nextEmoji();
         break;
       case YAW_RIGHT:
+      case PITCH_FORWARD: // backup action
         view.selectEmojiAndSend(true);
         break;
       default:

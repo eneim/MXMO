@@ -18,6 +18,7 @@ package im.ene.mxmo.presentation.game;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -179,8 +180,8 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
     boardFragment.checkCursor();
   }
 
-  @Override public void prepareEmojiSelectDialog() {
-    chatFragment.showEmojiDialog();
+  @Override public void prepareEmojiSelectDialog(DialogInterface.OnShowListener listener) {
+    chatFragment.showEmojiDialog(listener);
 
     //Handler handler = new Handler();
     //handler.postDelayed(new Runnable() {

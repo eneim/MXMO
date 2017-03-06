@@ -132,6 +132,7 @@ public class GameBoardFragment extends BaseFragment implements GameBoardContract
     // only check when user can do this
     if (callback != null && callback.isMyTurnNow()) {
       adapter.manuallyCheck(adapter.getCursorPosition());
+      callback.onUserMove(adapter.getGameState());
     }
   }
 
