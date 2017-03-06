@@ -19,7 +19,6 @@ package im.ene.mxmo.presentation.game;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.view.View;
 import com.google.firebase.database.FirebaseDatabase;
 
 /**
@@ -37,9 +36,8 @@ public class NormalGameFragment extends GameFragment {
     return presenter;
   }
 
-  @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    presenter.setView(this);
+  @Override protected void removePresenter() {
+    this.presenter = null;
   }
 
   @Override public void onActivityCreated(@Nullable Bundle savedInstanceState) {

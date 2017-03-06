@@ -21,7 +21,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.support.annotation.Nullable;
-import android.support.multidex.MultiDex;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -138,7 +137,7 @@ public class MemeApp extends Application {
 
   @Override protected void attachBaseContext(Context base) {
     super.attachBaseContext(base);
-    MultiDex.install(this);
+    // MultiDex.install(this);
   }
 
   // support meme

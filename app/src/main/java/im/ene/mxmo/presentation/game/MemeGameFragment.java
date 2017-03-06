@@ -24,7 +24,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,14 +54,13 @@ public class MemeGameFragment extends GameFragment implements GameContract.MemeG
     return presenter;
   }
 
+  @Override protected void removePresenter() {
+    this.presenter = null;
+  }
+
   @Override public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     getApp().initMemeLib();
-  }
-
-  @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    presenter.setView(this);
   }
 
   @Override public void onStart() {

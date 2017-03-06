@@ -104,11 +104,13 @@ public abstract class GameFragment extends BaseFragment
         .setCancelable(false)
         .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss())
         .create();
+    getPresenter().setView(this);
   }
 
   @Override public void onDestroyView() {
     super.onDestroyView();
     getPresenter().setView(null);
+    removePresenter();
   }
 
   // GameView interface
@@ -238,6 +240,8 @@ public abstract class GameFragment extends BaseFragment
   }
 
   @NonNull protected abstract GameContract.Presenter getPresenter();
+
+  protected abstract void removePresenter();
 
   // Other interfaces
 

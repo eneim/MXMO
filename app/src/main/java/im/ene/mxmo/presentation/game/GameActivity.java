@@ -50,21 +50,22 @@ public class GameActivity extends BaseActivity {
     userModeChooserDialog = new AlertDialog.Builder(this).setTitle("Select user mode:")
         .setSingleChoiceItems(new CharSequence[] { "Normal User", "Meme User" }, userMode,
             (dialog, which) -> getApp().setGameMode(which))
-        .setNeutralButton(android.R.string.ok, (dialog, which) -> //
+        .setPositiveButton(android.R.string.ok, (dialog, which) -> //
             getSupportFragmentManager().beginTransaction()
                 .replace(android.R.id.content, GameFragment.newInstance(getApp().getGameMode()))
                 .commit())
+        .setNegativeButton(android.R.string.cancel, (dialog, which) -> finish())
         .setCancelable(false)
         .create();
 
     welcomeDialog = new AlertDialog.Builder(this).setTitle("Welcome to MxMo!")
         .setMessage("Please choose your mode (Meme User will require a Jins Meme to play)")
-        .setNeutralButton(android.R.string.ok, (dialog, which) -> dialog.dismiss())
-        .setOnDismissListener(dialog -> {
+        .setPositiveButton(android.R.string.ok, (dialog, which) -> {
           if (!userModeChooserDialog.isShowing()) {
             userModeChooserDialog.show();
           }
         })
+        .setNegativeButton(android.R.string.cancel, (dialog, which) -> finish())
         .setCancelable(false)
         .create();
 
