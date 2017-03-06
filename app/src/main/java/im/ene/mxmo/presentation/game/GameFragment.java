@@ -223,7 +223,13 @@ public abstract class GameFragment extends BaseFragment
     boardFragment.syncBoard(cells, userInput);
     String winner = getPresenter().judge();
     if (winner != null) {
-      Toast.makeText(getContext(), "Winner: " + winner, Toast.LENGTH_SHORT).show();
+      new AlertDialog.Builder(getContext()).setCancelable(false)
+          .setTitle("Congratulation!!!")
+          .setMessage(winner + " has won the game!")
+          .setPositiveButton("Done", (dialog, which) -> dialog.dismiss())
+          .setOnDismissListener(dialog -> getActivity().finish())
+          .create()
+          .show();
     }
   }
 
