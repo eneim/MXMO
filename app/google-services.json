@@ -1,0 +1,107 @@
+{
+  "project_info": {
+    "project_number": "671722774796",
+    "firebase_url": "https://mxmo-e4261.firebaseio.com",
+    "project_id": "mxmo-e4261",
+    "storage_bucket": "mxmo-e4261.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671722774796:android:eef54388adf0f5fb",
+        "android_client_info": {
+          "package_name": "im.ene.mxmo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "671722774796-m3su2nk831drele46bg1qj806n57h3iu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "im.ene.mxmo",
+            "certificate_hash": "9eaed6de67987347206acfab9171e17059a1d647"
+          }
+        },
+        {
+          "client_id": "671722774796-a3tgfeolt0t2u3atjfpmgghkf6cnlitk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "im.ene.mxmo",
+            "certificate_hash": "ff14fd77e4a6e4dddda83594a38ad8be179a68da"
+          }
+        },
+        {
+          "client_id": "671722774796-sgujhkpmkgsl894hoftsp4bhgtc2mkpi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAod0_HnfNiMRJQewJxCbbl2cFail5QZX4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "671722774796-sgujhkpmkgsl894hoftsp4bhgtc2mkpi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671722774796:android:f410745894d706dd",
+        "android_client_info": {
+          "package_name": "im.ene.mxmo.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "671722774796-5b5k5b5bl5d2okfk67tr48mkscqsklmq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "im.ene.mxmo.debug",
+            "certificate_hash": "9eaed6de67987347206acfab9171e17059a1d647"
+          }
+        },
+        {
+          "client_id": "671722774796-sgujhkpmkgsl894hoftsp4bhgtc2mkpi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAod0_HnfNiMRJQewJxCbbl2cFail5QZX4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "671722774796-sgujhkpmkgsl894hoftsp4bhgtc2mkpi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
